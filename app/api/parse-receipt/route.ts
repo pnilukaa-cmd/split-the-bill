@@ -59,6 +59,28 @@ interface RawReceipt {
   total: number;
 }
 
+const SUPPORTED_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+type SupportedMediaType = "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+
+function isValidRawReceipt(value: unknown): value is RawReceipt {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    Array.isArray(v.items) &&
+    v.items.every(
+      (it) =>
+        it &&
+        typeof it === "object" &&
+        typeof (it as Record<string, unknown>).name === "string" &&
+        typeof (it as Record<string, unknown>).price === "number"
+    ) &&
+    typeof v.subtotal === "number" &&
+    typeof v.tax === "number" &&
+    typeof v.tip === "number" &&
+    typeof v.total === "number"
+  );
+}
+
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -73,13 +95,16 @@ export async function POST(req: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No image uploaded." }, { status: 400 });
   }
-  if (!file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "Uploaded file isn't an image." }, { status: 400 });
+  if (!SUPPORTED_MEDIA_TYPES.has(file.type)) {
+    return NextResponse.json(
+      { error: `Unsupported image format (${file.type || "unknown"}). Please use a JPEG, PNG, WEBP, or GIF photo.` },
+      { status: 400 }
+    );
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const base64 = bytes.toString("base64");
-  const mediaType = file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+  const mediaType = file.type as SupportedMediaType;
 
   const anthropic = new Anthropic({ apiKey });
 
@@ -87,7 +112,7 @@ export async function POST(req: NextRequest) {
   try {
     message = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 2048,
+      max_tokens: 4096,
       tools: [extractReceiptTool],
       tool_choice: { type: "tool", name: "extract_receipt" },
       messages: [
@@ -124,7 +149,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const raw = toolUse.input as RawReceipt;
+  if (!isValidRawReceipt(toolUse.input)) {
+    return NextResponse.json(
+      { error: "The model returned an incomplete read of the receipt. Try again, or use a clearer photo." },
+      { status: 502 }
+    );
+  }
+  const raw = toolUse.input;
 
   const items: ReceiptItem[] = raw.items.map((it) => ({
     id: crypto.randomUUID(),

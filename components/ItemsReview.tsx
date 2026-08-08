@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ParsedReceipt, ReceiptItem } from "@/lib/types";
-import { dollarsToCents, formatCents } from "@/lib/split";
+import { centsToDollarsInput, dollarsToCents, formatCents } from "@/lib/split";
 import StepHeader from "./StepHeader";
 
 interface Props {
@@ -80,7 +80,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
               type="number"
               step="0.01"
               className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right text-sm"
-              value={(item.priceCents / 100).toFixed(2)}
+              value={centsToDollarsInput(item.priceCents)}
               onChange={(e) => updateItem(item.id, "price", e.target.value)}
             />
             <button
@@ -109,7 +109,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             type="number"
             step="0.01"
             className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right"
-            value={(taxCents / 100).toFixed(2)}
+            value={centsToDollarsInput(taxCents)}
             onChange={(e) => setTaxCents(dollarsToCents(parseFloat(e.target.value) || 0))}
           />
         </label>
@@ -119,7 +119,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             type="number"
             step="0.01"
             className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right"
-            value={(tipCents / 100).toFixed(2)}
+            value={centsToDollarsInput(tipCents)}
             onChange={(e) => setTipCents(dollarsToCents(parseFloat(e.target.value) || 0))}
           />
         </label>

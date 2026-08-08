@@ -14,8 +14,14 @@ interface Props {
 }
 
 export default function ItemAssignment({ receipt, people, assignments, onChange, onNext, onBack }: Props) {
+  const validPersonIds = new Set(people.map((p) => p.id));
+
+  function assignedTo(itemId: string): string[] {
+    return (assignments[itemId] ?? []).filter((id) => validPersonIds.has(id));
+  }
+
   function toggle(itemId: string, personId: string) {
-    const current = assignments[itemId] ?? [];
+    const current = assignedTo(itemId);
     const next = current.includes(personId)
       ? current.filter((id) => id !== personId)
       : [...current, personId];
@@ -26,7 +32,7 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
     onChange({ ...assignments, [itemId]: people.map((p) => p.id) });
   }
 
-  const unassignedCount = receipt.items.filter((item) => (assignments[item.id] ?? []).length === 0).length;
+  const unassignedCount = receipt.items.filter((item) => assignedTo(item.id).length === 0).length;
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -34,7 +40,7 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
 
       <ul className="flex flex-col gap-3">
         {receipt.items.map((item) => {
-          const assigned = assignments[item.id] ?? [];
+          const assigned = assignedTo(item.id);
           return (
             <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3">
               <div className="flex items-center justify-between">
