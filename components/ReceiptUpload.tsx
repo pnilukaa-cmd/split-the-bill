@@ -62,7 +62,6 @@ export default function ReceiptUpload({ onParsed }: Props) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
