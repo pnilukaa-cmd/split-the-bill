@@ -8,7 +8,8 @@ interface Props {
 }
 
 export default function ReceiptUpload({ onParsed }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,23 +60,45 @@ export default function ReceiptUpload({ onParsed }: Props) {
       {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>}
 
       <input
-        ref={inputRef}
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={libraryInputRef}
         type="file"
         accept="image/*"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFile(file);
+          e.target.value = "";
         }}
       />
 
-      <button
-        onClick={() => inputRef.current?.click()}
-        disabled={loading}
-        className="w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
-      >
-        {loading ? "Reading receipt…" : preview ? "Try a different photo" : "Take or upload a photo"}
-      </button>
+      <div className="flex w-full gap-3">
+        <button
+          onClick={() => cameraInputRef.current?.click()}
+          disabled={loading}
+          className="flex-1 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        >
+          {loading ? "Reading…" : "Take photo"}
+        </button>
+        <button
+          onClick={() => libraryInputRef.current?.click()}
+          disabled={loading}
+          className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+        >
+          Choose photo
+        </button>
+      </div>
     </div>
   );
 }
