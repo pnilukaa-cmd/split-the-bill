@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { ParsedReceipt, ReceiptItem } from "@/lib/types";
 import { dollarsToCents } from "@/lib/split";
+import { getClientIdentifier, isScanAllowed } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -88,6 +89,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Server is missing ANTHROPIC_API_KEY. Add it to .env.local and restart." },
       { status: 500 }
+    );
+  }
+
+  const identifier = getClientIdentifier(req);
+  if (!(await isScanAllowed(identifier))) {
+    return NextResponse.json(
+      { error: "You've hit today's scan limit for this app. Try again tomorrow." },
+      { status: 429 }
     );
   }
 

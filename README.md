@@ -28,6 +28,8 @@ however your group already does (Venmo, cash, etc.).
   using forced tool-use for structured output
 - No database, no auth — state lives in the browser for the duration of one
   split
+- Optional `@upstash/ratelimit` + `@upstash/redis` for a per-IP daily scan
+  cap (no-ops if unconfigured — see below)
 
 ## Getting started
 
@@ -38,8 +40,22 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. On a phone, the file input opens the camera
-directly.
+Open http://localhost:3000. "Take photo" opens the camera; "Choose photo"
+opens the library.
+
+## Cost controls
+
+Every scan costs a small amount in Claude API tokens. Two layers protect
+against a surprise bill:
+
+1. **Per-IP daily cap (in this repo)** — set `UPSTASH_REDIS_REST_URL` and
+   `UPSTASH_REDIS_REST_TOKEN` (free tier at [upstash.com](https://upstash.com))
+   to cap scans at 8/day per IP. Without these set, the app still works but
+   has no rate limiting.
+2. **Hard spend limit (set this yourself, not code)** — in the
+   [Anthropic Console](https://console.anthropic.com), set a monthly spend
+   cap on the API key this app uses. This is the backstop that matters most:
+   it's a hard ceiling regardless of what happens at the app layer.
 
 ## Notes on the math
 

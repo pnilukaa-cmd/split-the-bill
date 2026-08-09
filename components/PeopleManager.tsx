@@ -40,7 +40,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Add a name"
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+          className="flex-1 rounded-lg border border-ledger-rule px-3 py-2 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
         />
         <button
           type="submit"
@@ -68,7 +68,9 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
         ))}
       </ul>
 
-      {people.length === 0 && <p className="text-sm text-slate-400">Add at least one person to continue.</p>}
+      {people.length === 0 && (
+        <p className="text-sm text-ledger-inkFaint">Add at least one person to continue.</p>
+      )}
 
       <button
         onClick={onNext}

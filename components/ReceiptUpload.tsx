@@ -135,8 +135,8 @@ export default function ReceiptUpload({ onParsed }: Props) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Split the Bill</h1>
-        <p className="mt-2 text-slate-500">
+        <h1 className="font-serif text-2xl font-semibold text-ledger-ink">Split the Bill</h1>
+        <p className="mt-2 text-ledger-inkSoft">
           Snap a photo of the receipt. We&apos;ll read the items so you can split them fairly.
         </p>
       </div>
@@ -146,7 +146,7 @@ export default function ReceiptUpload({ onParsed }: Props) {
         <img
           src={preview}
           alt="Receipt preview"
-          className="max-h-64 w-full rounded-xl border border-slate-200 object-contain shadow-sm"
+          className="max-h-64 w-full rounded-xl border border-ledger-rule object-contain shadow-sm"
         />
       )}
 
@@ -187,7 +187,7 @@ export default function ReceiptUpload({ onParsed }: Props) {
         <button
           onClick={() => libraryInputRef.current?.click()}
           disabled={loading}
-          className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+          className="flex-1 rounded-xl border border-ledger-rule bg-white px-4 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-paperMuted disabled:opacity-60"
         >
           Choose photo
         </button>

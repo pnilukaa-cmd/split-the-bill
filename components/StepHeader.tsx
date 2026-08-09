@@ -10,15 +10,15 @@ export default function StepHeader({ title, subtitle, onBack }: Props) {
       {onBack && (
         <button
           onClick={onBack}
-          className="mt-1 text-slate-400 transition hover:text-slate-700"
+          className="mt-1 text-ledger-inkFaint transition hover:text-ledger-ink"
           aria-label="Back"
         >
           ←
         </button>
       )}
       <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+        <h2 className="font-serif text-lg font-semibold text-ledger-ink">{title}</h2>
+        {subtitle && <p className="text-sm text-ledger-inkSoft">{subtitle}</p>}
       </div>
     </div>
   );

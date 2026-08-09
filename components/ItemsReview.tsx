@@ -62,30 +62,30 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
         {items.map((item) => (
           <li
             key={item.id}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2"
+            className="flex items-center gap-2 rounded-lg border border-ledger-rule bg-white p-2"
           >
             <input
-              className="min-w-0 flex-1 rounded-md border border-transparent px-2 py-1 text-sm focus:border-brand-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-md border border-transparent px-2 py-1 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
               value={item.name}
               onChange={(e) => updateItem(item.id, "name", e.target.value)}
             />
             <input
               type="number"
               min={1}
-              className="w-12 rounded-md border border-slate-200 px-1 py-1 text-center text-sm"
+              className="w-12 rounded-md border border-ledger-rule px-1 py-1 text-center text-sm tabular-nums"
               value={item.quantity}
               onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
             />
             <input
               type="number"
               step="0.01"
-              className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right text-sm"
+              className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right text-sm font-serif tabular-nums"
               value={centsToDollarsInput(item.priceCents)}
               onChange={(e) => updateItem(item.id, "price", e.target.value)}
             />
             <button
               onClick={() => removeItem(item.id)}
-              className="text-slate-400 hover:text-red-600"
+              className="text-ledger-inkFaint hover:text-red-600"
               aria-label={`Remove ${item.name}`}
             >
               ✕
@@ -98,17 +98,17 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
         + Add item
       </button>
 
-      <div className="mt-2 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-3 text-sm">
+      <div className="mt-2 grid grid-cols-2 gap-3 rounded-lg border border-ledger-rule bg-white p-3 text-sm">
         <div className="col-span-2 flex items-center justify-between">
           <span>Subtotal</span>
-          <span className="font-medium">{formatCents(itemsSubtotalCents)}</span>
+          <span className="font-serif font-medium tabular-nums">{formatCents(itemsSubtotalCents)}</span>
         </div>
         <label className="flex items-center justify-between gap-2">
           Tax
           <input
             type="number"
             step="0.01"
-            className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right"
+            className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right font-serif tabular-nums"
             value={centsToDollarsInput(taxCents)}
             onChange={(e) => setTaxCents(dollarsToCents(parseFloat(e.target.value) || 0))}
           />
@@ -118,14 +118,14 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
           <input
             type="number"
             step="0.01"
-            className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right"
+            className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right font-serif tabular-nums"
             value={centsToDollarsInput(tipCents)}
             onChange={(e) => setTipCents(dollarsToCents(parseFloat(e.target.value) || 0))}
           />
         </label>
-        <div className="col-span-2 flex items-center justify-between border-t border-slate-100 pt-2 font-semibold">
+        <div className="col-span-2 flex items-center justify-between border-t border-ledger-ruleSoft pt-2 font-semibold">
           <span>Total</span>
-          <span>{formatCents(totalCents)}</span>
+          <span className="font-serif tabular-nums">{formatCents(totalCents)}</span>
         </div>
       </div>
 

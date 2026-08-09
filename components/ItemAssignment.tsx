@@ -42,13 +42,15 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
         {receipt.items.map((item) => {
           const assigned = assignedTo(item.id);
           return (
-            <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3">
+            <li key={item.id} className="rounded-lg border border-ledger-rule bg-white p-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-900">
+                <span className="font-medium text-ledger-ink">
                   {item.name}
                   {item.quantity > 1 ? ` ×${item.quantity}` : ""}
                 </span>
-                <span className="text-sm text-slate-500">{formatCents(item.priceCents)}</span>
+                <span className="font-serif text-sm tabular-nums text-ledger-inkSoft">
+                  {formatCents(item.priceCents)}
+                </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {people.map((p) => {
@@ -58,7 +60,9 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
                       key={p.id}
                       onClick={() => toggle(item.id, p.id)}
                       className={`rounded-full px-3 py-1 text-sm transition ${
-                        active ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        active
+                          ? "bg-brand-600 text-white"
+                          : "bg-ledger-paperMuted text-ledger-inkSoft hover:bg-ledger-ruleSoft"
                       }`}
                     >
                       {p.name}
@@ -67,7 +71,7 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
                 })}
                 <button
                   onClick={() => assignToEveryone(item.id)}
-                  className="rounded-full border border-dashed border-slate-300 px-3 py-1 text-sm text-slate-500 hover:border-brand-400 hover:text-brand-600"
+                  className="rounded-full border border-dashed border-ledger-rule px-3 py-1 text-sm text-ledger-inkSoft hover:border-brand-400 hover:text-brand-600"
                 >
                   Everyone
                 </button>
