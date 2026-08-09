@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lora } from "next/font/google";
 import "./globals.css";
-import { BUY_ME_A_COFFEE_URL } from "@/lib/config";
+import { TIP_URL } from "@/lib/config";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const ledgerSerif = Lora({
@@ -31,12 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <div className="mt-6 flex justify-center">
             <a
-              href={BUY_ME_A_COFFEE_URL}
+              href={TIP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-ledger-inkFaint underline decoration-dotted underline-offset-2 transition hover:text-ledger-brass"
             >
-              ☕ Buy me a coffee
+              💸 Tip via Venmo
             </a>
           </div>
         </div>
