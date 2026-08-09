@@ -7,12 +7,23 @@ interface Props {
   onParsed: (receipt: ParsedReceipt) => void;
 }
 
-const UPLOAD_TIMEOUT_MS = 45000;
-const MAX_DIMENSION = 1600;
+const UPLOAD_TIMEOUT_MS = 55000;
+// Stay well under Vercel's ~4.5MB request body limit for serverless functions.
+const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
-async function compressImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+// Progressively smaller/lower-quality passes. A 4K phone photo (often
+// 8-12MB) needs more than one round of downscaling to land under the
+// upload cap, so try each step and keep the first one that fits.
+const COMPRESSION_STEPS = [
+  { maxDimension: 1600, quality: 0.85 },
+  { maxDimension: 1600, quality: 0.6 },
+  { maxDimension: 1200, quality: 0.6 },
+  { maxDimension: 1000, quality: 0.5 },
+  { maxDimension: 800, quality: 0.4 },
+];
+
+function renderToJpeg(bitmap: ImageBitmap, maxDimension: number, quality: number): Promise<Blob> {
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
 
@@ -27,9 +38,22 @@ async function compressImage(file: File): Promise<Blob> {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Could not process this image."))),
       "image/jpeg",
-      0.85
+      quality
     );
   });
+}
+
+async function compressImage(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  let smallest: Blob | null = null;
+  for (const { maxDimension, quality } of COMPRESSION_STEPS) {
+    const blob = await renderToJpeg(bitmap, maxDimension, quality);
+    if (!smallest || blob.size < smallest.size) smallest = blob;
+    if (blob.size <= MAX_UPLOAD_BYTES) return blob;
+  }
+  // Even the smallest pass didn't fit — use it anyway; the server will
+  // give a clear error rather than silently truncating.
+  return smallest!;
 }
 
 export default function ReceiptUpload({ onParsed }: Props) {
