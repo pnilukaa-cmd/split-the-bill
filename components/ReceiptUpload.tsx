@@ -61,7 +61,11 @@ export default function ReceiptUpload({ onParsed }: Props) {
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Guards against a stale compression/upload finishing after the watchdog
+  // already gave up and showed an error for that same attempt.
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     if (!preview) return;
@@ -72,9 +76,21 @@ export default function ReceiptUpload({ onParsed }: Props) {
     setError(null);
     setPreview(URL.createObjectURL(file));
     setLoading(true);
+    setStatus("Compressing photo…");
+
+    const requestId = ++requestIdRef.current;
+    const isCurrent = () => requestIdRef.current === requestId;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+    // Covers the WHOLE pipeline — compression can stall on some phones
+    // just as easily as the network request, and a timeout that only
+    // wraps fetch() never fires if it's stuck before that point.
+    const watchdogId = setTimeout(() => {
+      if (!isCurrent()) return;
+      controller.abort();
+      setLoading(false);
+      setError("This is taking too long — check your connection and try a different photo.");
+    }, UPLOAD_TIMEOUT_MS);
 
     try {
       let upload: Blob = file;
@@ -85,7 +101,9 @@ export default function ReceiptUpload({ onParsed }: Props) {
         // (e.g. an image format the canvas can't decode) — the server
         // still validates the format and gives a clear error if it can't.
       }
+      if (!isCurrent()) return;
 
+      setStatus("Reading receipt…");
       const formData = new FormData();
       formData.append("image", upload, "receipt.jpg");
       const res = await fetch("/api/parse-receipt", {
@@ -93,20 +111,24 @@ export default function ReceiptUpload({ onParsed }: Props) {
         body: formData,
         signal: controller.signal,
       });
+      if (!isCurrent()) return;
+
       const data = await res.json();
+      if (!isCurrent()) return;
       if (!res.ok) {
         throw new Error(data.error || "Something went wrong reading the receipt.");
       }
       onParsed(data as ParsedReceipt);
     } catch (err) {
+      if (!isCurrent()) return;
       if (err instanceof DOMException && err.name === "AbortError") {
-        setError("This is taking too long — check your connection and try again.");
+        setError("This is taking too long — check your connection and try a different photo.");
       } else {
         setError(err instanceof Error ? err.message : "Something went wrong.");
       }
     } finally {
-      clearTimeout(timeoutId);
-      setLoading(false);
+      clearTimeout(watchdogId);
+      if (isCurrent()) setLoading(false);
     }
   }
 
@@ -160,7 +182,7 @@ export default function ReceiptUpload({ onParsed }: Props) {
           disabled={loading}
           className="flex-1 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
         >
-          {loading ? "Reading…" : "Take photo"}
+          {loading ? status || "Working…" : "Take photo"}
         </button>
         <button
           onClick={() => libraryInputRef.current?.click()}
