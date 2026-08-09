@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ParsedReceipt } from "@/lib/types";
+import { MOCK_RECEIPT } from "@/lib/mockReceipt";
 
 interface Props {
   onParsed: (receipt: ParsedReceipt) => void;
@@ -66,6 +67,19 @@ export default function ReceiptUpload({ onParsed }: Props) {
   // Guards against a stale compression/upload finishing after the watchdog
   // already gave up and showed an error for that same attempt.
   const requestIdRef = useRef(0);
+  // Lets you test the rest of the flow without paying for OCR each time:
+  // always on in local dev, and on a deployed URL only when visiting
+  // with ?demo=1 — so real users never see it.
+  const [demoMode, setDemoMode] = useState(false);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      setDemoMode(true);
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    setDemoMode(params.get("demo") === "1");
+  }, []);
 
   useEffect(() => {
     if (!preview) return;
@@ -192,6 +206,15 @@ export default function ReceiptUpload({ onParsed }: Props) {
           Choose photo
         </button>
       </div>
+
+      {demoMode && (
+        <button
+          onClick={() => onParsed(MOCK_RECEIPT)}
+          className="text-xs text-ledger-inkFaint underline decoration-dotted underline-offset-2 hover:text-ledger-brass"
+        >
+          Try a sample receipt (no API call)
+        </button>
+      )}
     </div>
   );
 }
