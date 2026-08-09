@@ -4,6 +4,7 @@ import { ParsedReceipt, ReceiptItem } from "@/lib/types";
 import { dollarsToCents } from "@/lib/split";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const MODEL = "claude-sonnet-5";
 

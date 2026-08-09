@@ -7,6 +7,31 @@ interface Props {
   onParsed: (receipt: ParsedReceipt) => void;
 }
 
+const UPLOAD_TIMEOUT_MS = 45000;
+const MAX_DIMENSION = 1600;
+
+async function compressImage(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not process this image on your device.");
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Could not process this image."))),
+      "image/jpeg",
+      0.85
+    );
+  });
+}
+
 export default function ReceiptUpload({ onParsed }: Props) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
@@ -23,18 +48,40 @@ export default function ReceiptUpload({ onParsed }: Props) {
     setError(null);
     setPreview(URL.createObjectURL(file));
     setLoading(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
     try {
+      let upload: Blob = file;
+      try {
+        upload = await compressImage(file);
+      } catch {
+        // Fall back to the original file if client-side compression fails
+        // (e.g. an image format the canvas can't decode) — the server
+        // still validates the format and gives a clear error if it can't.
+      }
+
       const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("/api/parse-receipt", { method: "POST", body: formData });
+      formData.append("image", upload, "receipt.jpg");
+      const res = await fetch("/api/parse-receipt", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Something went wrong reading the receipt.");
       }
       onParsed(data as ParsedReceipt);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("This is taking too long — check your connection and try again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }
