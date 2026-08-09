@@ -98,6 +98,13 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
         + Add item
       </button>
 
+      {tipCents === 0 && (
+        <p className="flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <span aria-hidden>💡</span>
+          Most receipts don&apos;t print the tip — add yours below so everyone&apos;s split is accurate.
+        </p>
+      )}
+
       <div className="mt-2 grid grid-cols-2 gap-3 rounded-lg border border-ledger-rule bg-white p-3 text-sm">
         <div className="col-span-2 flex items-center justify-between">
           <span>Subtotal</span>
@@ -118,7 +125,9 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
           <input
             type="number"
             step="0.01"
-            className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right font-serif tabular-nums"
+            className={`w-20 rounded-md border px-2 py-1 text-right font-serif tabular-nums ${
+              tipCents === 0 ? "border-amber-400 ring-1 ring-amber-200" : "border-ledger-rule"
+            }`}
             value={centsToDollarsInput(tipCents)}
             onChange={(e) => setTipCents(dollarsToCents(parseFloat(e.target.value) || 0))}
           />
