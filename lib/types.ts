@@ -19,6 +19,8 @@ export interface ParsedReceipt {
 export interface Person {
   id: string;
   name: string;
+  /** Emoji override for the person's avatar. Falls back to a color+initial when unset. */
+  icon?: string;
 }
 
 /** itemId -> personIds currently sharing that item. */

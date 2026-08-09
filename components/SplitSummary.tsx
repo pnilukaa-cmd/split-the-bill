@@ -2,6 +2,7 @@
 
 import { Assignments, ParsedReceipt, Person } from "@/lib/types";
 import { computeSplit, formatCents } from "@/lib/split";
+import PersonAvatar from "./PersonAvatar";
 import StepHeader from "./StepHeader";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 export default function SplitSummary({ receipt, people, assignments, onStartOver, onBack }: Props) {
   const { totals, unassignedItemIds } = computeSplit(receipt, people, assignments);
   const unassignedItems = receipt.items.filter((item) => unassignedItemIds.includes(item.id));
+  const iconByPersonId = new Map(people.map((p) => [p.id, p.icon]));
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -32,7 +34,10 @@ export default function SplitSummary({ receipt, people, assignments, onStartOver
         {totals.map((t) => (
           <li key={t.personId} className="rounded-lg border border-ledger-rule bg-white p-3">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-ledger-ink">{t.name}</span>
+              <span className="flex items-center gap-2 font-semibold text-ledger-ink">
+                <PersonAvatar name={t.name} icon={iconByPersonId.get(t.personId)} size="md" />
+                {t.name}
+              </span>
               <span className="font-serif text-lg font-bold tabular-nums text-brand-700">
                 {formatCents(t.totalCents)}
               </span>

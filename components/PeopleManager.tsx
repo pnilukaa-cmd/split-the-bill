@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Person } from "@/lib/types";
+import { PERSON_ICONS } from "@/lib/avatar";
+import PersonAvatar from "./PersonAvatar";
 import StepHeader from "./StepHeader";
 
 interface Props {
@@ -13,6 +15,7 @@ interface Props {
 
 export default function PeopleManager({ people, onChange, onNext, onBack }: Props) {
   const [name, setName] = useState("");
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
 
   function addPerson() {
     const trimmed = name.trim();
@@ -23,7 +26,15 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
 
   function removePerson(id: string) {
     onChange(people.filter((p) => p.id !== id));
+    if (pickerFor === id) setPickerFor(null);
   }
+
+  function setIcon(personId: string, icon: string | undefined) {
+    onChange(people.map((p) => (p.id === personId ? { ...p, icon } : p)));
+    setPickerFor(null);
+  }
+
+  const pickerPerson = people.find((p) => p.id === pickerFor);
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -54,8 +65,16 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
         {people.map((p) => (
           <li
             key={p.id}
-            className="flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1.5 text-sm text-brand-700"
+            className="flex items-center gap-2 rounded-full bg-brand-50 py-1 pl-1 pr-3 text-sm text-brand-700"
           >
+            <button
+              type="button"
+              onClick={() => setPickerFor(pickerFor === p.id ? null : p.id)}
+              aria-label={`Change icon for ${p.name}`}
+              className="rounded-full"
+            >
+              <PersonAvatar name={p.name} icon={p.icon} />
+            </button>
             {p.name}
             <button
               onClick={() => removePerson(p.id)}
@@ -67,6 +86,40 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
           </li>
         ))}
       </ul>
+
+      {pickerPerson && (
+        <div className="rounded-lg border border-ledger-rule bg-white p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-medium text-ledger-inkSoft">Pick an icon for {pickerPerson.name}</p>
+            <button
+              onClick={() => setPickerFor(null)}
+              className="text-xs text-ledger-inkFaint hover:text-ledger-ink"
+            >
+              Done
+            </button>
+          </div>
+          <div className="grid grid-cols-8 gap-1">
+            {PERSON_ICONS.map((icon) => (
+              <button
+                key={icon}
+                type="button"
+                onClick={() => setIcon(pickerPerson.id, icon)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-lg hover:bg-ledger-paperMuted"
+              >
+                {icon}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setIcon(pickerPerson.id, undefined)}
+              aria-label="Use default color instead of an icon"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-dashed border-ledger-rule text-xs text-ledger-inkFaint hover:bg-ledger-paperMuted"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {people.length === 0 && (
         <p className="text-sm text-ledger-inkFaint">Add at least one person to continue.</p>

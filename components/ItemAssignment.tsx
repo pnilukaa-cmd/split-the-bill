@@ -2,6 +2,7 @@
 
 import { Assignments, ParsedReceipt, Person } from "@/lib/types";
 import { formatCents } from "@/lib/split";
+import PersonAvatar from "./PersonAvatar";
 import StepHeader from "./StepHeader";
 
 interface Props {
@@ -59,12 +60,13 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
                     <button
                       key={p.id}
                       onClick={() => toggle(item.id, p.id)}
-                      className={`rounded-full px-3 py-1 text-sm transition ${
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition ${
                         active
                           ? "bg-brand-600 text-white"
                           : "bg-ledger-paperMuted text-ledger-inkSoft hover:bg-ledger-ruleSoft"
                       }`}
                     >
+                      <PersonAvatar name={p.name} icon={p.icon} />
                       {p.name}
                     </button>
                   );
