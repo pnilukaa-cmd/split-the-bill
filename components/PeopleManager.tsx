@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Person } from "@/lib/types";
 import { PERSON_ICONS } from "@/lib/avatar";
 import { loadRecentPeople, rememberPerson, RecentPerson } from "@/lib/recentPeople";
@@ -19,10 +19,25 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
   const [name, setName] = useState("");
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentPerson[]>([]);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setRecent(loadRecentPeople());
   }, []);
+
+  // Closes the icon picker on an outside tap — the toggle buttons manage
+  // their own open/close/switch, so this only needs to catch everything else.
+  useEffect(() => {
+    if (!pickerFor) return;
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (pickerRef.current?.contains(target)) return;
+      if (target.closest("[data-avatar-toggle]")) return;
+      setPickerFor(null);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [pickerFor]);
 
   function addPerson() {
     const trimmed = name.trim();
@@ -106,6 +121,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
           >
             <button
               type="button"
+              data-avatar-toggle
               onClick={() => setPickerFor(pickerFor === p.id ? null : p.id)}
               aria-label={`Change icon for ${p.name}`}
               className="rounded-full"
@@ -125,7 +141,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
       </ul>
 
       {pickerPerson && (
-        <div className="rounded-lg border border-ledger-rule bg-white p-3">
+        <div ref={pickerRef} className="rounded-lg border border-ledger-rule bg-white p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium text-ledger-inkSoft">Pick an icon for {pickerPerson.name}</p>
             <button

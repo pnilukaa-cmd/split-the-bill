@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Adjustment, ParsedReceipt, ReceiptItem } from "@/lib/types";
 import { centsToDollarsInput, dollarsToCents, formatCents } from "@/lib/split";
 import StepHeader from "./StepHeader";
@@ -13,12 +13,52 @@ interface Props {
 }
 
 const TIP_PRESETS = [0.18, 0.2, 0.25];
+const UNDO_TIMEOUT_MS = 6000;
+
+type RemovedEntry =
+  | { kind: "item"; value: ReceiptItem; index: number }
+  | { kind: "adjustment"; value: Adjustment; index: number };
 
 export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props) {
   const [items, setItems] = useState<ReceiptItem[]>(receipt.items);
   const [taxCents, setTaxCents] = useState(receipt.taxCents);
   const [tipCents, setTipCents] = useState(receipt.tipCents);
   const [adjustments, setAdjustments] = useState<Adjustment[]>(receipt.adjustments ?? []);
+
+  // A stray tap on ✕ shouldn't mean re-typing an item from scratch — keep
+  // the last removed item/adjustment around briefly so it can be restored.
+  const [lastRemoved, setLastRemoved] = useState<RemovedEntry | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
+
+  function scheduleUndoClear() {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => setLastRemoved(null), UNDO_TIMEOUT_MS);
+  }
+
+  function undoRemove() {
+    if (!lastRemoved) return;
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    if (lastRemoved.kind === "item") {
+      setItems((prev) => {
+        const next = [...prev];
+        next.splice(lastRemoved.index, 0, lastRemoved.value);
+        return next;
+      });
+    } else {
+      setAdjustments((prev) => {
+        const next = [...prev];
+        next.splice(lastRemoved.index, 0, lastRemoved.value);
+        return next;
+      });
+    }
+    setLastRemoved(null);
+  }
 
   // Raw text currently being typed into a numeric field, keyed by field id.
   // A controlled input whose value is rebuilt from the formatted cents on
@@ -57,7 +97,13 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
   }
 
   function removeItem(id: string) {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev) => {
+      const index = prev.findIndex((item) => item.id === id);
+      if (index === -1) return prev;
+      setLastRemoved({ kind: "item", value: prev[index], index });
+      scheduleUndoClear();
+      return prev.filter((item) => item.id !== id);
+    });
   }
 
   function addItem() {
@@ -82,7 +128,13 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
   }
 
   function removeAdjustment(id: string) {
-    setAdjustments((prev) => prev.filter((a) => a.id !== id));
+    setAdjustments((prev) => {
+      const index = prev.findIndex((a) => a.id === id);
+      if (index === -1) return prev;
+      setLastRemoved({ kind: "adjustment", value: prev[index], index });
+      scheduleUndoClear();
+      return prev.filter((a) => a.id !== id);
+    });
   }
 
   const itemsSubtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
@@ -110,6 +162,18 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
 
       {receipt.warning && (
         <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">{receipt.warning}</p>
+      )}
+
+      {lastRemoved && (
+        <div className="flex items-center justify-between rounded-lg bg-ledger-paperMuted px-4 py-2 text-sm text-ledger-ink">
+          <span>
+            Removed &ldquo;{lastRemoved.kind === "item" ? lastRemoved.value.name : lastRemoved.value.label}
+            &rdquo;
+          </span>
+          <button onClick={undoRemove} className="font-semibold text-brand-700 hover:underline">
+            Undo
+          </button>
+        </div>
       )}
 
       <ul className="flex flex-col gap-2">

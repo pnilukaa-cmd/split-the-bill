@@ -48,7 +48,7 @@ export default function QuickSplitEntry({ onNext, onBack }: Props) {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            className="flex-1 border-none bg-transparent font-serif text-lg tabular-nums text-ledger-ink focus:outline-none"
+            className="flex-1 border-none bg-transparent font-serif text-lg tabular-nums text-ledger-ink focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
       </label>

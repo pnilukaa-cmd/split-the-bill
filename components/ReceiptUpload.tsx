@@ -236,7 +236,11 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
   const canAddMore = pages.length < MAX_PAGES;
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+    <div
+      className={`flex flex-1 flex-col gap-6 text-center ${
+        reviewing ? "" : "items-center justify-center"
+      }`}
+    >
       <div>
         <h1 className="font-serif text-2xl font-semibold text-ledger-ink">Split the Bill</h1>
         <p className="mt-2 text-ledger-inkSoft">
@@ -302,16 +306,6 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
         }}
       />
 
-      {reviewing && (
-        <button
-          onClick={scanReceipt}
-          disabled={loading}
-          className="w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
-        >
-          {loading ? status || "Working…" : `Scan receipt${pages.length > 1 ? ` (${pages.length} pages)` : ""}`}
-        </button>
-      )}
-
       <div className="flex w-full gap-3">
         <button
           onClick={() => cameraInputRef.current?.click()}
@@ -332,6 +326,22 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
           {reviewing ? "+ Add page (photos)" : "Choose photo"}
         </button>
       </div>
+
+      {reviewing && (
+        <p className="-mt-3 text-xs text-ledger-inkFaint">
+          {canAddMore ? `Up to ${MAX_PAGES} photos per receipt` : `Up to ${MAX_PAGES} photos — remove one to add another`}
+        </p>
+      )}
+
+      {reviewing && (
+        <button
+          onClick={scanReceipt}
+          disabled={loading}
+          className="mt-auto w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        >
+          {loading ? status || "Working…" : `Scan receipt${pages.length > 1 ? ` (${pages.length} pages)` : ""}`}
+        </button>
+      )}
 
       {!reviewing && (
         <button
