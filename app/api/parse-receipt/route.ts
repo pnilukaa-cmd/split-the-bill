@@ -128,22 +128,36 @@ export async function POST(req: NextRequest) {
   }
 
   const formData = await req.formData();
-  const file = formData.get("image");
-  if (!(file instanceof File)) {
+  const files = formData.getAll("image");
+  if (files.length === 0 || !files.every((f): f is File => f instanceof File)) {
     return NextResponse.json({ error: "No image uploaded." }, { status: 400 });
   }
-  if (!SUPPORTED_MEDIA_TYPES.has(file.type)) {
+  const invalidType = files.find((f) => !SUPPORTED_MEDIA_TYPES.has(f.type));
+  if (invalidType) {
     return NextResponse.json(
-      { error: `Unsupported image format (${file.type || "unknown"}). Please use a JPEG, PNG, WEBP, or GIF photo.` },
+      {
+        error: `Unsupported image format (${invalidType.type || "unknown"}). Please use a JPEG, PNG, WEBP, or GIF photo.`,
+      },
       { status: 400 }
     );
   }
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const base64 = bytes.toString("base64");
-  const mediaType = file.type as SupportedMediaType;
+  const imageBlocks: Anthropic.ImageBlockParam[] = await Promise.all(
+    files.map(async (file) => {
+      const bytes = Buffer.from(await file.arrayBuffer());
+      return {
+        type: "image" as const,
+        source: { type: "base64" as const, media_type: file.type as SupportedMediaType, data: bytes.toString("base64") },
+      };
+    })
+  );
 
   const anthropic = new Anthropic({ apiKey });
+
+  const multiPage = files.length > 1;
+  const promptText = multiPage
+    ? `These are ${files.length} photos of one restaurant receipt, in order, split across multiple pages because it was too long for one photo (possibly crumpled, faded, or at an angle). Treat them as one continuous receipt — read every line item exactly once even if a header, footer, or a line item appears again at the boundary between two photos due to overlap. Extract every distinct line item with its price, plus subtotal, tax, tip, and total. If a value isn't printed, make your best estimate rather than leaving it blank. Separately, if the receipt has a discount/coupon/promo line or a service charge / auto-gratuity line (distinct from a voluntary tip), extract those as adjustments — don't fold them silently into the total.`
+    : "This is a photo of a restaurant receipt, possibly crumpled, faded, or at an angle. Read it carefully and extract every line item with its price, plus subtotal, tax, tip, and total. If a value isn't printed, make your best estimate rather than leaving it blank. Separately, if the receipt has a discount/coupon/promo line or a service charge / auto-gratuity line (distinct from a voluntary tip), extract those as adjustments — don't fold them silently into the total.";
 
   let message: Anthropic.Message;
   try {
@@ -155,16 +169,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "user",
-          content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: mediaType, data: base64 },
-            },
-            {
-              type: "text",
-              text: "This is a photo of a restaurant receipt, possibly crumpled, faded, or at an angle. Read it carefully and extract every line item with its price, plus subtotal, tax, tip, and total. If a value isn't printed, make your best estimate rather than leaving it blank. Separately, if the receipt has a discount/coupon/promo line or a service charge / auto-gratuity line (distinct from a voluntary tip), extract those as adjustments — don't fold them silently into the total.",
-            },
-          ],
+          content: [...imageBlocks, { type: "text", text: promptText }],
         },
       ],
     });
