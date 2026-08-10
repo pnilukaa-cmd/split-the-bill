@@ -62,17 +62,31 @@ export function computeSplit(
   const taxShares = distributeProportionally(receipt.taxCents, weights);
   const tipShares = distributeProportionally(receipt.tipCents, weights);
 
+  // Discounts and service charges prorate by the same item-share weights as
+  // tax/tip — a discount subtracts from each person's cut, a charge adds.
+  const adjustmentsCentsByPerson: Record<string, number> = {};
+  people.forEach((p) => (adjustmentsCentsByPerson[p.id] = 0));
+  for (const adjustment of receipt.adjustments ?? []) {
+    const shares = distributeProportionally(adjustment.amountCents, weights);
+    const sign = adjustment.kind === "discount" ? -1 : 1;
+    people.forEach((p, idx) => {
+      adjustmentsCentsByPerson[p.id] += sign * shares[idx];
+    });
+  }
+
   const totals: PersonTotal[] = people.map((p, idx) => {
     const itemsCents = itemsCentsByPerson[p.id];
     const taxCents = taxShares[idx];
     const tipCents = tipShares[idx];
+    const adjustmentsCents = adjustmentsCentsByPerson[p.id];
     return {
       personId: p.id,
       name: p.name,
       itemsCents,
       taxCents,
       tipCents,
-      totalCents: itemsCents + taxCents + tipCents,
+      adjustmentsCents,
+      totalCents: itemsCents + taxCents + tipCents + adjustmentsCents,
     };
   });
 

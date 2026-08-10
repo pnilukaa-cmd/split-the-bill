@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ParsedReceipt, ReceiptItem } from "@/lib/types";
+import { Adjustment, ParsedReceipt, ReceiptItem } from "@/lib/types";
 import { centsToDollarsInput, dollarsToCents, formatCents } from "@/lib/split";
 import StepHeader from "./StepHeader";
 
@@ -12,10 +12,13 @@ interface Props {
   onBack: () => void;
 }
 
+const TIP_PRESETS = [0.18, 0.2, 0.25];
+
 export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props) {
   const [items, setItems] = useState<ReceiptItem[]>(receipt.items);
   const [taxCents, setTaxCents] = useState(receipt.taxCents);
   const [tipCents, setTipCents] = useState(receipt.tipCents);
+  const [adjustments, setAdjustments] = useState<Adjustment[]>(receipt.adjustments ?? []);
 
   // Raw text currently being typed into a numeric field, keyed by field id.
   // A controlled input whose value is rebuilt from the formatted cents on
@@ -61,8 +64,33 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
     setItems((prev) => [...prev, { id: crypto.randomUUID(), name: "New item", priceCents: 0, quantity: 1 }]);
   }
 
+  function addAdjustment(kind: Adjustment["kind"]) {
+    setAdjustments((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), label: kind === "discount" ? "Discount" : "Service charge", amountCents: 0, kind },
+    ]);
+  }
+
+  function updateAdjustment(id: string, field: "label" | "amount", value: string) {
+    setAdjustments((prev) =>
+      prev.map((a) => {
+        if (a.id !== id) return a;
+        if (field === "label") return { ...a, label: value };
+        return { ...a, amountCents: Math.abs(dollarsToCents(parseFloat(value) || 0)) };
+      })
+    );
+  }
+
+  function removeAdjustment(id: string) {
+    setAdjustments((prev) => prev.filter((a) => a.id !== id));
+  }
+
   const itemsSubtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
-  const totalCents = itemsSubtotalCents + taxCents + tipCents;
+  const adjustmentsNetCents = adjustments.reduce(
+    (sum, a) => sum + (a.kind === "discount" ? -a.amountCents : a.amountCents),
+    0
+  );
+  const totalCents = itemsSubtotalCents + taxCents + tipCents + adjustmentsNetCents;
 
   function handleNext() {
     onChange({
@@ -70,6 +98,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       subtotalCents: itemsSubtotalCents,
       taxCents,
       tipCents,
+      adjustments,
       totalCents,
     });
     onNext();
@@ -131,6 +160,55 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
         + Add item
       </button>
 
+      {adjustments.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {adjustments.map((a) => (
+            <li
+              key={a.id}
+              className={`flex items-center gap-2 rounded-lg border p-2 ${
+                a.kind === "discount" ? "border-brand-300 bg-brand-50" : "border-ledger-rule bg-white"
+              }`}
+            >
+              <span className="text-xs text-ledger-inkFaint" aria-hidden>
+                {a.kind === "discount" ? "−" : "+"}
+              </span>
+              <input
+                className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
+                value={a.label}
+                onChange={(e) => updateAdjustment(a.id, "label", e.target.value)}
+              />
+              <input
+                type="number"
+                step="0.01"
+                className="w-20 rounded-md border border-ledger-rule bg-white px-2 py-1 text-right text-sm font-serif tabular-nums"
+                value={draftOr(`adj-${a.id}`, centsToDollarsInput(a.amountCents))}
+                onChange={(e) => {
+                  setDraft(`adj-${a.id}`, e.target.value);
+                  updateAdjustment(a.id, "amount", e.target.value);
+                }}
+                onBlur={() => clearDraft(`adj-${a.id}`)}
+              />
+              <button
+                onClick={() => removeAdjustment(a.id)}
+                className="text-ledger-inkFaint hover:text-red-600"
+                aria-label={`Remove ${a.label}`}
+              >
+                ✕
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex gap-4 self-start text-sm font-medium">
+        <button onClick={() => addAdjustment("discount")} className="text-brand-700 hover:underline">
+          + Add discount
+        </button>
+        <button onClick={() => addAdjustment("charge")} className="text-brand-700 hover:underline">
+          + Add service charge
+        </button>
+      </div>
+
       {tipCents === 0 && (
         <p className="flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
           <span aria-hidden>💡</span>
@@ -157,22 +235,47 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             onBlur={() => clearDraft("tax")}
           />
         </label>
-        <label className="flex items-center justify-between gap-2">
-          Tip
-          <input
-            type="number"
-            step="0.01"
-            className={`w-20 rounded-md border px-2 py-1 text-right font-serif tabular-nums ${
-              tipCents === 0 ? "border-amber-400 ring-1 ring-amber-200" : "border-ledger-rule"
-            }`}
-            value={draftOr("tip", centsToDollarsInput(tipCents))}
-            onChange={(e) => {
-              setDraft("tip", e.target.value);
-              setTipCents(dollarsToCents(parseFloat(e.target.value) || 0));
-            }}
-            onBlur={() => clearDraft("tip")}
-          />
-        </label>
+        <div className="col-span-2 flex flex-col gap-1.5">
+          <label className="flex items-center justify-between gap-2">
+            Tip
+            <input
+              type="number"
+              step="0.01"
+              className={`w-20 rounded-md border px-2 py-1 text-right font-serif tabular-nums ${
+                tipCents === 0 ? "border-amber-400 ring-1 ring-amber-200" : "border-ledger-rule"
+              }`}
+              value={draftOr("tip", centsToDollarsInput(tipCents))}
+              onChange={(e) => {
+                setDraft("tip", e.target.value);
+                setTipCents(dollarsToCents(parseFloat(e.target.value) || 0));
+              }}
+              onBlur={() => clearDraft("tip")}
+            />
+          </label>
+          <div className="flex justify-end gap-1.5">
+            {TIP_PRESETS.map((pct) => {
+              const presetCents = Math.round(itemsSubtotalCents * pct);
+              const active = tipCents === presetCents;
+              return (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => {
+                    clearDraft("tip");
+                    setTipCents(presetCents);
+                  }}
+                  className={`rounded-full border px-2 py-0.5 text-xs tabular-nums transition ${
+                    active
+                      ? "border-brand-600 bg-brand-600 text-white"
+                      : "border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-700"
+                  }`}
+                >
+                  {Math.round(pct * 100)}%
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <div className="col-span-2 flex items-center justify-between border-t border-ledger-ruleSoft pt-2 font-semibold">
           <span>Total</span>
           <span className="font-serif tabular-nums">{formatCents(totalCents)}</span>

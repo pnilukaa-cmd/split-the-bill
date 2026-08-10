@@ -44,10 +44,16 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
                 {formatCents(t.totalCents)}
               </span>
             </div>
-            <div className="mt-1 flex justify-between text-xs tabular-nums text-ledger-inkSoft">
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs tabular-nums text-ledger-inkSoft">
               <span>Items {formatCents(t.itemsCents)}</span>
               <span>Tax {formatCents(t.taxCents)}</span>
               <span>Tip {formatCents(t.tipCents)}</span>
+              {t.adjustmentsCents !== 0 && (
+                <span className={t.adjustmentsCents < 0 ? "text-brand-700" : undefined}>
+                  Adjustments {t.adjustmentsCents > 0 ? "+" : ""}
+                  {formatCents(t.adjustmentsCents)}
+                </span>
+              )}
             </div>
           </li>
         ))}

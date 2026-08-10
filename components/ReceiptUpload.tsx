@@ -6,6 +6,7 @@ import { MOCK_RECEIPT } from "@/lib/mockReceipt";
 
 interface Props {
   onParsed: (receipt: ParsedReceipt) => void;
+  onQuickSplit: () => void;
 }
 
 const UPLOAD_TIMEOUT_MS = 55000;
@@ -57,7 +58,7 @@ async function compressImage(file: File): Promise<Blob> {
   return smallest!;
 }
 
-export default function ReceiptUpload({ onParsed }: Props) {
+export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -206,6 +207,13 @@ export default function ReceiptUpload({ onParsed }: Props) {
           Choose photo
         </button>
       </div>
+
+      <button
+        onClick={onQuickSplit}
+        className="text-sm text-ledger-inkSoft underline decoration-dotted underline-offset-2 hover:text-brand-700"
+      >
+        No receipt? Split a total evenly
+      </button>
 
       {demoMode && (
         <button

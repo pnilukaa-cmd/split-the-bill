@@ -13,5 +13,6 @@ export const MOCK_RECEIPT: ParsedReceipt = {
   subtotalCents: 4400,
   taxCents: 385,
   tipCents: 800,
-  totalCents: 5585,
+  adjustments: [{ id: "mock-adj-1", label: "Happy Hour Promo", amountCents: 500, kind: "discount" }],
+  totalCents: 5085,
 };

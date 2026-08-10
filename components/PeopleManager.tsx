@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Person } from "@/lib/types";
 import { PERSON_ICONS } from "@/lib/avatar";
+import { loadRecentPeople, rememberPerson, RecentPerson } from "@/lib/recentPeople";
 import PersonAvatar from "./PersonAvatar";
 import StepHeader from "./StepHeader";
 
@@ -11,17 +12,29 @@ interface Props {
   onChange: (people: Person[]) => void;
   onNext: () => void;
   onBack: () => void;
+  nextLabel?: string;
 }
 
-export default function PeopleManager({ people, onChange, onNext, onBack }: Props) {
+export default function PeopleManager({ people, onChange, onNext, onBack, nextLabel = "Next: Assign items" }: Props) {
   const [name, setName] = useState("");
   const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const [recent, setRecent] = useState<RecentPerson[]>([]);
+
+  useEffect(() => {
+    setRecent(loadRecentPeople());
+  }, []);
 
   function addPerson() {
     const trimmed = name.trim();
     if (!trimmed) return;
     onChange([...people, { id: crypto.randomUUID(), name: trimmed }]);
+    rememberPerson({ name: trimmed });
     setName("");
+  }
+
+  function addFromRecent(person: RecentPerson) {
+    onChange([...people, { id: crypto.randomUUID(), name: person.name, icon: person.icon }]);
+    rememberPerson(person);
   }
 
   function removePerson(id: string) {
@@ -30,11 +43,15 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
   }
 
   function setIcon(personId: string, icon: string | undefined) {
+    const person = people.find((p) => p.id === personId);
     onChange(people.map((p) => (p.id === personId ? { ...p, icon } : p)));
+    if (person) rememberPerson({ name: person.name, icon });
     setPickerFor(null);
   }
 
   const pickerPerson = people.find((p) => p.id === pickerFor);
+  const addedNames = new Set(people.map((p) => p.name.toLowerCase()));
+  const suggestions = recent.filter((r) => !addedNames.has(r.name.toLowerCase()));
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -60,6 +77,26 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
           Add
         </button>
       </form>
+
+      {suggestions.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-ledger-inkFaint">From this device</p>
+          <ul className="flex flex-wrap gap-2">
+            {suggestions.map((r) => (
+              <li key={r.name}>
+                <button
+                  type="button"
+                  onClick={() => addFromRecent(r)}
+                  className="flex items-center gap-1.5 rounded-full border border-dashed border-ledger-rule bg-white py-1 pl-1 pr-3 text-sm text-ledger-inkSoft transition hover:border-brand-400 hover:text-brand-700"
+                >
+                  <PersonAvatar name={r.name} icon={r.icon} />
+                  {r.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <ul className="flex flex-wrap gap-2">
         {people.map((p) => (
@@ -130,7 +167,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack }: Prop
         disabled={people.length === 0}
         className="mt-auto w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
-        Next: Assign items
+        {nextLabel}
       </button>
     </div>
   );

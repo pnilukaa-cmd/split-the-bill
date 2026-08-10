@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Assignments, ItemWeights, ParsedReceipt, Person, WizardStep } from "@/lib/types";
 import { parseShareHash, SharePayload } from "@/lib/share";
 import ReceiptUpload from "@/components/ReceiptUpload";
+import QuickSplitEntry from "@/components/QuickSplitEntry";
 import ItemsReview from "@/components/ItemsReview";
 import PeopleManager from "@/components/PeopleManager";
 import ItemAssignment from "@/components/ItemAssignment";
@@ -18,6 +19,10 @@ export default function Home() {
   const [people, setPeople] = useState<Person[]>([]);
   const [assignments, setAssignments] = useState<Assignments>({});
   const [itemWeights, setItemWeights] = useState<ItemWeights>({});
+  // True when the receipt came from the "split a total evenly" shortcut
+  // rather than a scan — skips the item-assignment step entirely since
+  // there's only one implicit item, shared equally by everyone.
+  const [quickMode, setQuickMode] = useState(false);
   // undefined = still checking the URL hash (avoids a flash of the upload screen or a hydration mismatch).
   const [sharedLink, setSharedLink] = useState<SharedLink | null | undefined>(undefined);
 
@@ -31,6 +36,17 @@ export default function Home() {
     setPeople([]);
     setAssignments({});
     setItemWeights({});
+    setQuickMode(false);
+  }
+
+  function handlePeopleNext() {
+    if (quickMode && receipt) {
+      const [onlyItem] = receipt.items;
+      setAssignments({ [onlyItem.id]: people.map((p) => p.id) });
+      setStep("summary");
+    } else {
+      setStep("assign");
+    }
   }
 
   function startOwnBill() {
@@ -55,6 +71,22 @@ export default function Home() {
             setReceipt(parsed);
             setStep("review-items");
           }}
+          onQuickSplit={() => {
+            setQuickMode(true);
+            setStep("quick-entry");
+          }}
+        />
+      )}
+      {step === "quick-entry" && (
+        <QuickSplitEntry
+          onNext={(parsed) => {
+            setReceipt(parsed);
+            setStep("people");
+          }}
+          onBack={() => {
+            setQuickMode(false);
+            setStep("upload");
+          }}
         />
       )}
       {step === "review-items" && receipt && (
@@ -69,8 +101,9 @@ export default function Home() {
         <PeopleManager
           people={people}
           onChange={setPeople}
-          onNext={() => setStep("assign")}
-          onBack={() => setStep("review-items")}
+          onNext={handlePeopleNext}
+          onBack={() => setStep(quickMode ? "quick-entry" : "review-items")}
+          nextLabel={quickMode ? "Next: See split" : "Next: Assign items"}
         />
       )}
       {step === "assign" && receipt && (
@@ -92,7 +125,7 @@ export default function Home() {
           assignments={assignments}
           itemWeights={itemWeights}
           onStartOver={reset}
-          onBack={() => setStep("assign")}
+          onBack={() => setStep(quickMode ? "people" : "assign")}
         />
       )}
     </>

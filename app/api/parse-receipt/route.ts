@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { ParsedReceipt, ReceiptItem } from "@/lib/types";
+import { Adjustment, ParsedReceipt, ReceiptItem } from "@/lib/types";
 import { dollarsToCents } from "@/lib/split";
 import { getClientIdentifier, isScanAllowed } from "@/lib/rateLimit";
 
@@ -40,12 +40,26 @@ const extractReceiptTool: Anthropic.Tool = {
       },
       subtotal: {
         type: "number",
-        description: "Subtotal in dollars before tax and tip. Estimate as sum of items if not printed.",
+        description: "Subtotal in dollars before tax, tip, discounts, and service charges. Estimate as sum of items if not printed.",
       },
       tax: { type: "number", description: "Tax amount in dollars. 0 if none." },
       tip: {
         type: "number",
         description: "Tip/gratuity amount in dollars, if already printed on the receipt. 0 if none.",
+      },
+      adjustments: {
+        type: "array",
+        description:
+          "Any discount/coupon/promo lines (kind: discount) or service charge / auto-gratuity lines (kind: charge) printed on the receipt, separate from tax and the voluntary tip. Omit entirely if there are none — do not invent one.",
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string", description: "Line as printed, e.g. \"Promo Code\" or \"Service Charge\"." },
+            amount: { type: "number", description: "Positive dollar amount of this line, as printed." },
+            kind: { type: "string", enum: ["discount", "charge"] },
+          },
+          required: ["label", "amount", "kind"],
+        },
       },
       total: { type: "number", description: "Grand total in dollars as printed on the receipt." },
     },
@@ -58,6 +72,7 @@ interface RawReceipt {
   subtotal: number;
   tax: number;
   tip: number;
+  adjustments?: { label: string; amount: number; kind: "discount" | "charge" }[];
   total: number;
 }
 
@@ -67,6 +82,17 @@ type SupportedMediaType = "image/jpeg" | "image/png" | "image/webp" | "image/gif
 function isValidRawReceipt(value: unknown): value is RawReceipt {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
+  const adjustmentsValid =
+    v.adjustments === undefined ||
+    (Array.isArray(v.adjustments) &&
+      v.adjustments.every(
+        (a) =>
+          a &&
+          typeof a === "object" &&
+          typeof (a as Record<string, unknown>).label === "string" &&
+          typeof (a as Record<string, unknown>).amount === "number" &&
+          ((a as Record<string, unknown>).kind === "discount" || (a as Record<string, unknown>).kind === "charge")
+      ));
   return (
     Array.isArray(v.items) &&
     v.items.every(
@@ -79,7 +105,8 @@ function isValidRawReceipt(value: unknown): value is RawReceipt {
     typeof v.subtotal === "number" &&
     typeof v.tax === "number" &&
     typeof v.tip === "number" &&
-    typeof v.total === "number"
+    typeof v.total === "number" &&
+    adjustmentsValid
   );
 }
 
@@ -135,7 +162,7 @@ export async function POST(req: NextRequest) {
             },
             {
               type: "text",
-              text: "This is a photo of a restaurant receipt, possibly crumpled, faded, or at an angle. Read it carefully and extract every line item with its price, plus subtotal, tax, tip, and total. If a value isn't printed, make your best estimate rather than leaving it blank.",
+              text: "This is a photo of a restaurant receipt, possibly crumpled, faded, or at an angle. Read it carefully and extract every line item with its price, plus subtotal, tax, tip, and total. If a value isn't printed, make your best estimate rather than leaving it blank. Separately, if the receipt has a discount/coupon/promo line or a service charge / auto-gratuity line (distinct from a voluntary tip), extract those as adjustments — don't fold them silently into the total.",
             },
           ],
         },
@@ -178,13 +205,23 @@ export async function POST(req: NextRequest) {
   const taxCents = dollarsToCents(raw.tax);
   const tipCents = dollarsToCents(raw.tip);
   const totalCents = dollarsToCents(raw.total);
+  const adjustments: Adjustment[] = (raw.adjustments ?? []).map((a) => ({
+    id: crypto.randomUUID(),
+    label: a.label,
+    amountCents: Math.abs(dollarsToCents(a.amount)),
+    kind: a.kind,
+  }));
 
   const itemsSum = items.reduce((sum, item) => sum + item.priceCents, 0);
-  const reconciled = itemsSum + taxCents + tipCents;
+  const adjustmentsNet = adjustments.reduce(
+    (sum, a) => sum + (a.kind === "discount" ? -a.amountCents : a.amountCents),
+    0
+  );
+  const reconciled = itemsSum + taxCents + tipCents + adjustmentsNet;
 
   let warning: string | undefined;
   if (Math.abs(reconciled - totalCents) > 100) {
-    warning = `The scanned items, tax, and tip add up to $${(reconciled / 100).toFixed(
+    warning = `The scanned items, tax, tip, and adjustments add up to $${(reconciled / 100).toFixed(
       2
     )}, which doesn't match the printed total of $${(totalCents / 100).toFixed(
       2
@@ -196,6 +233,7 @@ export async function POST(req: NextRequest) {
     subtotalCents,
     taxCents,
     tipCents,
+    adjustments,
     totalCents,
     warning,
   };
