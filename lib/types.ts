@@ -26,6 +26,9 @@ export interface Person {
 /** itemId -> personIds currently sharing that item. */
 export type Assignments = Record<string, string[]>;
 
+/** itemId -> personId -> weight (units), for splitting a shared item unevenly. Missing entries default to 1. */
+export type ItemWeights = Record<string, Record<string, number>>;
+
 export interface PersonTotal {
   personId: string;
   name: string;

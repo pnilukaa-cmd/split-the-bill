@@ -1,28 +1,34 @@
 "use client";
 
-import { Assignments, ItemWeights, ParsedReceipt, Person } from "@/lib/types";
+import { useEffect, useRef } from "react";
+import { SharePayload } from "@/lib/share";
 import { computeSplit, formatCents } from "@/lib/split";
 import PersonAvatar from "./PersonAvatar";
-import StepHeader from "./StepHeader";
-import ShareSplit from "./ShareSplit";
 
 interface Props {
-  receipt: ParsedReceipt;
-  people: Person[];
-  assignments: Assignments;
-  itemWeights: ItemWeights;
-  onStartOver: () => void;
-  onBack: () => void;
+  payload: SharePayload;
+  highlightPersonId: string | null;
+  onStartOwn: () => void;
 }
 
-export default function SplitSummary({ receipt, people, assignments, itemWeights, onStartOver, onBack }: Props) {
+export default function ShareView({ payload, highlightPersonId, onStartOwn }: Props) {
+  const { receipt, people, assignments, itemWeights } = payload;
   const { totals, unassignedItemIds } = computeSplit(receipt, people, assignments, itemWeights);
   const unassignedItems = receipt.items.filter((item) => unassignedItemIds.includes(item.id));
   const iconByPersonId = new Map(people.map((p) => [p.id, p.icon]));
+  const highlightRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <StepHeader title="Here's the split" subtitle="Proportional tax and tip included." onBack={onBack} />
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-ledger-brass">Shared split</p>
+        <h1 className="font-serif text-2xl font-semibold text-ledger-ink">Here&apos;s the split</h1>
+        <p className="mt-1 text-sm text-ledger-inkSoft">Proportional tax and tip included.</p>
+      </div>
 
       {unassignedItems.length > 0 && (
         <div className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
@@ -34,7 +40,15 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
 
       <ul className="flex flex-col gap-2">
         {totals.map((t) => (
-          <li key={t.personId} className="rounded-lg border border-ledger-rule bg-white p-3">
+          <li
+            key={t.personId}
+            ref={t.personId === highlightPersonId ? highlightRef : undefined}
+            className={`rounded-lg border p-3 transition ${
+              t.personId === highlightPersonId
+                ? "border-brand-500 bg-brand-50 ring-1 ring-brand-300"
+                : "border-ledger-rule bg-white"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2 font-semibold text-ledger-ink">
                 <PersonAvatar name={t.name} icon={iconByPersonId.get(t.personId)} size="md" />
@@ -58,25 +72,15 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
         <span className="font-serif tabular-nums">{formatCents(receipt.totalCents)}</span>
       </div>
 
-      {unassignedItems.length === 0 && (
-        <div className="flex justify-center">
-          <span className="rounded-full border border-brand-500 px-3 py-0.5 font-serif text-xs italic text-brand-700">
-            Balanced to the cent
-          </span>
-        </div>
-      )}
-
       <p className="text-center text-xs text-ledger-inkFaint">
         Settle up however you like — Venmo, cash, or whatever works.
       </p>
 
-      <ShareSplit receipt={receipt} people={people} assignments={assignments} itemWeights={itemWeights} totals={totals} />
-
       <button
-        onClick={onStartOver}
+        onClick={onStartOwn}
         className="mt-auto w-full rounded-xl bg-ledger-ink px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700"
       >
-        Split another bill
+        Split your own bill
       </button>
     </div>
   );

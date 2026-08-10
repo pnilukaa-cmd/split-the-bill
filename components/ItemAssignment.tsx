@@ -1,6 +1,6 @@
 "use client";
 
-import { Assignments, ParsedReceipt, Person } from "@/lib/types";
+import { Assignments, ItemWeights, ParsedReceipt, Person } from "@/lib/types";
 import { formatCents } from "@/lib/split";
 import PersonAvatar from "./PersonAvatar";
 import StepHeader from "./StepHeader";
@@ -10,15 +10,38 @@ interface Props {
   people: Person[];
   assignments: Assignments;
   onChange: (assignments: Assignments) => void;
+  itemWeights: ItemWeights;
+  onWeightsChange: (weights: ItemWeights) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export default function ItemAssignment({ receipt, people, assignments, onChange, onNext, onBack }: Props) {
+export default function ItemAssignment({
+  receipt,
+  people,
+  assignments,
+  onChange,
+  itemWeights,
+  onWeightsChange,
+  onNext,
+  onBack,
+}: Props) {
   const validPersonIds = new Set(people.map((p) => p.id));
 
   function assignedTo(itemId: string): string[] {
     return (assignments[itemId] ?? []).filter((id) => validPersonIds.has(id));
+  }
+
+  function weightFor(itemId: string, personId: string): number {
+    return itemWeights[itemId]?.[personId] ?? 1;
+  }
+
+  function setWeight(itemId: string, personId: string, weight: number, quantity: number) {
+    const clamped = Math.max(1, Math.min(weight, Math.max(quantity, 1)));
+    onWeightsChange({
+      ...itemWeights,
+      [itemId]: { ...itemWeights[itemId], [personId]: clamped },
+    });
   }
 
   function toggle(itemId: string, personId: string) {
@@ -27,6 +50,13 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
       ? current.filter((id) => id !== personId)
       : [...current, personId];
     onChange({ ...assignments, [itemId]: next });
+
+    if (current.includes(personId)) {
+      // Drop the now-unused weight entry so it can't resurface if the person is re-added later.
+      const itemWeightMap = { ...itemWeights[itemId] };
+      delete itemWeightMap[personId];
+      onWeightsChange({ ...itemWeights, [itemId]: itemWeightMap });
+    }
   }
 
   function assignToEveryone(itemId: string) {
@@ -79,6 +109,48 @@ export default function ItemAssignment({ receipt, people, assignments, onChange,
                 </button>
               </div>
               {assigned.length === 0 && <p className="mt-1 text-xs text-amber-600">Not assigned yet</p>}
+
+              {item.quantity > 1 && assigned.length > 1 && (
+                <div className="mt-2 rounded-md bg-ledger-paperMuted p-2">
+                  <p className="text-xs text-ledger-inkFaint">
+                    Split unevenly? Set how many of the {item.quantity} units each person had.
+                  </p>
+                  <div className="mt-1.5 flex flex-col gap-1">
+                    {assigned.map((personId) => {
+                      const person = people.find((p) => p.id === personId);
+                      if (!person) return null;
+                      const weight = weightFor(item.id, personId);
+                      return (
+                        <div key={personId} className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1.5 text-ledger-inkSoft">
+                            <PersonAvatar name={person.name} icon={person.icon} />
+                            {person.name}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              aria-label={`Fewer units for ${person.name}`}
+                              onClick={() => setWeight(item.id, personId, weight - 1, item.quantity)}
+                              className="flex h-6 w-6 items-center justify-center rounded-full border border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-600"
+                            >
+                              −
+                            </button>
+                            <span className="w-4 text-center font-serif tabular-nums">{weight}</span>
+                            <button
+                              type="button"
+                              aria-label={`More units for ${person.name}`}
+                              onClick={() => setWeight(item.id, personId, weight + 1, item.quantity)}
+                              className="flex h-6 w-6 items-center justify-center rounded-full border border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-600"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </li>
           );
         })}

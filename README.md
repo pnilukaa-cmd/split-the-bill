@@ -16,10 +16,15 @@ however your group already does (Venmo, cash, etc.).
    wrong (thermal-printed receipts especially can be hard to read).
 3. **Add people** — everyone at the table.
 4. **Assign items** — tap who shared each item. Items split among multiple
-   people are divided evenly.
+   people are divided evenly by default; for a multi-unit item (e.g. a round
+   of drinks) you can set how many units each person had for an uneven
+   split.
 5. **Summary** — each person's total, with tax and tip distributed in
    proportion to what they ordered (not split evenly), and cents allocated
-   with no rounding error left over.
+   with no rounding error left over. From here you can share the split as a
+   link (with a QR code, or a per-person deep link to just their total) —
+   the whole split is encoded in the URL, so opening it needs no login and
+   nothing is stored on a server.
 
 ## Stack
 
@@ -30,6 +35,10 @@ however your group already does (Venmo, cash, etc.).
   split
 - Optional `@upstash/ratelimit` + `@upstash/redis` for a per-IP daily scan
   cap (no-ops if unconfigured — see below)
+- Shareable summary links are stateless: the split is compressed
+  (`lz-string`) into the URL hash, so a shared link is fully self-contained
+  and never touches a server. `qrcode` renders that link as a QR code
+  client-side.
 
 ## Getting started
 

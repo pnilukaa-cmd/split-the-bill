@@ -1,4 +1,4 @@
-import { Assignments, ParsedReceipt, Person, PersonTotal } from "./types";
+import { Assignments, ItemWeights, ParsedReceipt, Person, PersonTotal } from "./types";
 
 /**
  * Splits an integer amount across weighted shares so the parts sum exactly
@@ -35,7 +35,8 @@ export interface SplitResult {
 export function computeSplit(
   receipt: ParsedReceipt,
   people: Person[],
-  assignments: Assignments
+  assignments: Assignments,
+  itemWeights: ItemWeights = {}
 ): SplitResult {
   const itemsCentsByPerson: Record<string, number> = {};
   people.forEach((p) => (itemsCentsByPerson[p.id] = 0));
@@ -49,10 +50,9 @@ export function computeSplit(
       unassignedItemIds.push(item.id);
       continue;
     }
-    const shares = distributeProportionally(
-      item.priceCents,
-      assignees.map(() => 1)
-    );
+    // Weight defaults to 1 (even split) unless someone's claimed more units of a shared item.
+    const weights = assignees.map((personId) => itemWeights[item.id]?.[personId] || 1);
+    const shares = distributeProportionally(item.priceCents, weights);
     assignees.forEach((personId, idx) => {
       itemsCentsByPerson[personId] += shares[idx];
     });
