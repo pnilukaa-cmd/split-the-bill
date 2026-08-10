@@ -17,6 +17,31 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
   const [taxCents, setTaxCents] = useState(receipt.taxCents);
   const [tipCents, setTipCents] = useState(receipt.tipCents);
 
+  // Raw text currently being typed into a numeric field, keyed by field id.
+  // A controlled input whose value is rebuilt from the formatted cents on
+  // every keystroke snaps the cursor to the end after each character —
+  // typing "12.50" becomes impossible. Showing the draft while focused
+  // lets someone type freely (including a bare "12." mid-edit); on blur
+  // the field falls back to the canonical formatted value.
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  function draftOr(key: string, formatted: string): string {
+    return drafts[key] ?? formatted;
+  }
+
+  function setDraft(key: string, value: string) {
+    setDrafts((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function clearDraft(key: string) {
+    setDrafts((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
   function updateItem(id: string, field: "name" | "price" | "quantity", value: string) {
     setItems((prev) =>
       prev.map((item) => {
@@ -73,15 +98,23 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
               type="number"
               min={1}
               className="w-12 rounded-md border border-ledger-rule px-1 py-1 text-center text-sm tabular-nums"
-              value={item.quantity}
-              onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
+              value={draftOr(`qty-${item.id}`, String(item.quantity))}
+              onChange={(e) => {
+                setDraft(`qty-${item.id}`, e.target.value);
+                updateItem(item.id, "quantity", e.target.value);
+              }}
+              onBlur={() => clearDraft(`qty-${item.id}`)}
             />
             <input
               type="number"
               step="0.01"
               className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right text-sm font-serif tabular-nums"
-              value={centsToDollarsInput(item.priceCents)}
-              onChange={(e) => updateItem(item.id, "price", e.target.value)}
+              value={draftOr(`price-${item.id}`, centsToDollarsInput(item.priceCents))}
+              onChange={(e) => {
+                setDraft(`price-${item.id}`, e.target.value);
+                updateItem(item.id, "price", e.target.value);
+              }}
+              onBlur={() => clearDraft(`price-${item.id}`)}
             />
             <button
               onClick={() => removeItem(item.id)}
@@ -116,8 +149,12 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             type="number"
             step="0.01"
             className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right font-serif tabular-nums"
-            value={centsToDollarsInput(taxCents)}
-            onChange={(e) => setTaxCents(dollarsToCents(parseFloat(e.target.value) || 0))}
+            value={draftOr("tax", centsToDollarsInput(taxCents))}
+            onChange={(e) => {
+              setDraft("tax", e.target.value);
+              setTaxCents(dollarsToCents(parseFloat(e.target.value) || 0));
+            }}
+            onBlur={() => clearDraft("tax")}
           />
         </label>
         <label className="flex items-center justify-between gap-2">
@@ -128,8 +165,12 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             className={`w-20 rounded-md border px-2 py-1 text-right font-serif tabular-nums ${
               tipCents === 0 ? "border-amber-400 ring-1 ring-amber-200" : "border-ledger-rule"
             }`}
-            value={centsToDollarsInput(tipCents)}
-            onChange={(e) => setTipCents(dollarsToCents(parseFloat(e.target.value) || 0))}
+            value={draftOr("tip", centsToDollarsInput(tipCents))}
+            onChange={(e) => {
+              setDraft("tip", e.target.value);
+              setTipCents(dollarsToCents(parseFloat(e.target.value) || 0));
+            }}
+            onBlur={() => clearDraft("tip")}
           />
         </label>
         <div className="col-span-2 flex items-center justify-between border-t border-ledger-ruleSoft pt-2 font-semibold">
