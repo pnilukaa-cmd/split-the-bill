@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               rel="noopener noreferrer"
               className="text-xs text-ledger-inkFaint underline decoration-dotted underline-offset-2 transition hover:text-ledger-brass"
             >
-              🙌 Enjoying this? Send a tip on Venmo
+              💚 Made this for fun — tips welcome on Venmo
             </a>
           </div>
         </div>
