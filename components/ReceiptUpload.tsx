@@ -242,7 +242,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
       }`}
     >
       <div>
-        <h1 className="font-serif text-2xl font-semibold text-ledger-ink">Split the Bill</h1>
+        <h1 className="font-hand text-4xl text-ledger-ink">Split the Bill</h1>
         <p className="mt-2 text-ledger-inkSoft">
           {reviewing
             ? "Long receipt? Add another page before scanning."
@@ -255,16 +255,16 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
           {pages.map((p, i) => {
             const blurry = p.sharpness !== null && p.sharpness < BLUR_VARIANCE_THRESHOLD;
             return (
-              <li key={p.id} className="flex items-center gap-3 rounded-xl border border-ledger-rule bg-white p-2">
+              <li key={p.id} className="flex items-center gap-3 rounded-lg border border-ledger-rule bg-ledger-surface p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.previewUrl}
                   alt={`Receipt page ${i + 1}`}
-                  className="h-16 w-16 rounded-lg object-cover"
+                  className="h-16 w-16 rounded-md object-cover"
                 />
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-ledger-ink">Page {i + 1}</p>
-                  {blurry && <p className="text-xs text-amber-700">This looks blurry — consider retaking it.</p>}
+                  {blurry && <p className="text-xs text-amber-300">This looks blurry — consider retaking it.</p>}
                 </div>
                 <button
                   onClick={() => removePage(p.id)}
@@ -280,7 +280,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
         </ul>
       )}
 
-      {error && <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="rounded-lg bg-red-900/40 px-4 py-2 text-sm text-red-300">{error}</p>}
 
       <input
         ref={cameraInputRef}
@@ -312,8 +312,8 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
           disabled={loading || !canAddMore}
           className={
             reviewing
-              ? "flex-1 rounded-xl border border-ledger-rule bg-white px-4 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-paperMuted disabled:opacity-40"
-              : "flex-1 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+              ? "flex-1 rounded-md border border-ledger-rule bg-ledger-surface px-4 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-paperMuted disabled:opacity-40"
+              : "flex-1 rounded-md bg-brand-600 px-4 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
           }
         >
           {reviewing ? "+ Add page (camera)" : loading ? status || "Working…" : "Take photo"}
@@ -321,7 +321,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
         <button
           onClick={() => libraryInputRef.current?.click()}
           disabled={loading || !canAddMore}
-          className="flex-1 rounded-xl border border-ledger-rule bg-white px-4 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-paperMuted disabled:opacity-40"
+          className="flex-1 rounded-md border border-ledger-rule bg-ledger-surface px-4 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-paperMuted disabled:opacity-40"
         >
           {reviewing ? "+ Add page (photos)" : "Choose photo"}
         </button>
@@ -337,7 +337,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
         <button
           onClick={scanReceipt}
           disabled={loading}
-          className="mt-auto w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+          className="mt-auto w-full rounded-md bg-brand-600 px-4 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
         >
           {loading ? status || "Working…" : `Scan receipt${pages.length > 1 ? ` (${pages.length} pages)` : ""}`}
         </button>

@@ -7,12 +7,16 @@ interface Props {
 }
 
 export default function PersonAvatar({ name, icon, size = "sm" }: Props) {
-  const dimensionClasses = size === "md" ? "h-9 w-9 text-base" : "h-6 w-6 text-xs";
+  const boxClasses = size === "md" ? "h-9 w-9" : "h-6 w-6";
+  const emojiTextClasses = size === "md" ? "text-base" : "text-xs";
+  // NothingYouCouldDo is a script face — a single glyph needs to run larger
+  // than the emoji size to stay legible at these small circle dimensions.
+  const initialTextClasses = size === "md" ? "text-xl" : "text-sm";
 
   if (icon) {
     return (
       <span
-        className={`flex ${dimensionClasses} shrink-0 items-center justify-center rounded-full bg-white`}
+        className={`flex ${boxClasses} ${emojiTextClasses} shrink-0 items-center justify-center rounded-full bg-ledger-surface`}
         aria-hidden
       >
         {icon}
@@ -22,7 +26,7 @@ export default function PersonAvatar({ name, icon, size = "sm" }: Props) {
 
   return (
     <span
-      className={`flex ${dimensionClasses} shrink-0 items-center justify-center rounded-full font-serif font-semibold text-white`}
+      className={`flex ${boxClasses} ${initialTextClasses} shrink-0 items-center justify-center rounded-full font-hand font-semibold text-white`}
       style={{ backgroundColor: colorForName(name) }}
       aria-hidden
     >

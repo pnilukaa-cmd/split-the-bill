@@ -1,13 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Lora } from "next/font/google";
+import { IBM_Plex_Mono, Nothing_You_Could_Do, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { TIP_URL } from "@/lib/config";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
-const ledgerSerif = Lora({
+const chalkHand = Nothing_You_Could_Do({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-ledger-serif",
+  weight: ["400"],
+  variable: "--font-chalk-hand",
+});
+
+const chalkSans = Work_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-chalk-sans",
+});
+
+const chalkMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-chalk-mono",
 });
 
 export const metadata: Metadata = {
@@ -19,12 +31,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#1f5c43",
+  themeColor: "#2b3a34",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={ledgerSerif.variable}>
+    <html lang="en" className={`${chalkHand.variable} ${chalkSans.variable} ${chalkMono.variable}`}>
       <body className="min-h-screen">
         <ServiceWorkerRegister />
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 py-6 sm:max-w-lg">
@@ -36,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               rel="noopener noreferrer"
               className="text-xs text-ledger-inkFaint underline decoration-dotted underline-offset-2 transition hover:text-ledger-brass"
             >
-              💚 Made this for fun — tips welcome on Venmo
+              Made this for fun — tips welcome on Venmo
             </a>
           </div>
         </div>

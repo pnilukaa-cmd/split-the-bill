@@ -83,11 +83,11 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Add a name"
-          className="flex-1 rounded-lg border border-ledger-rule px-3 py-2 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
+          className="flex-1 rounded-lg border border-ledger-rule bg-ledger-surface px-3 py-2 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
         />
         <button
           type="submit"
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-[#2b3a34] hover:bg-brand-700"
         >
           Add
         </button>
@@ -102,7 +102,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
                 <button
                   type="button"
                   onClick={() => addFromRecent(r)}
-                  className="flex items-center gap-1.5 rounded-full border border-dashed border-ledger-rule bg-white py-1 pl-1 pr-3 text-sm text-ledger-inkSoft transition hover:border-brand-400 hover:text-brand-700"
+                  className="flex items-center gap-1.5 rounded-full border border-dashed border-ledger-rule bg-ledger-surface py-1 pl-1 pr-3 text-sm text-ledger-inkSoft transition hover:border-brand-400 hover:text-brand-700"
                 >
                   <PersonAvatar name={r.name} icon={r.icon} />
                   {r.name}
@@ -131,7 +131,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
             {p.name}
             <button
               onClick={() => removePerson(p.id)}
-              className="text-brand-400 hover:text-red-600"
+              className="text-brand-400 hover:text-red-400"
               aria-label={`Remove ${p.name}`}
             >
               ✕
@@ -141,7 +141,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
       </ul>
 
       {pickerPerson && (
-        <div ref={pickerRef} className="rounded-lg border border-ledger-rule bg-white p-3">
+        <div ref={pickerRef} className="rounded-lg border border-ledger-rule bg-ledger-surface p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium text-ledger-inkSoft">Pick an icon for {pickerPerson.name}</p>
             <button
@@ -181,7 +181,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
       <button
         onClick={onNext}
         disabled={people.length === 0}
-        className="mt-auto w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
         {nextLabel}
       </button>

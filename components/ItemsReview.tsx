@@ -161,7 +161,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       <StepHeader title="Review items" subtitle="Fix anything the scan got wrong." onBack={onBack} />
 
       {receipt.warning && (
-        <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">{receipt.warning}</p>
+        <p className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">{receipt.warning}</p>
       )}
 
       {lastRemoved && (
@@ -180,17 +180,17 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
         {items.map((item) => (
           <li
             key={item.id}
-            className="flex items-center gap-2 rounded-lg border border-ledger-rule bg-white p-2"
+            className="flex items-center gap-2 rounded-lg border border-ledger-rule bg-ledger-surface p-2"
           >
             <input
-              className="min-w-0 flex-1 rounded-md border border-transparent px-2 py-1 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
               value={item.name}
               onChange={(e) => updateItem(item.id, "name", e.target.value)}
             />
             <input
               type="number"
               min={1}
-              className="w-12 rounded-md border border-ledger-rule px-1 py-1 text-center text-sm tabular-nums"
+              className="w-12 rounded-md border border-ledger-rule bg-transparent px-1 py-1 text-center text-sm text-ledger-ink tabular-nums"
               value={draftOr(`qty-${item.id}`, String(item.quantity))}
               onChange={(e) => {
                 setDraft(`qty-${item.id}`, e.target.value);
@@ -201,7 +201,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             <input
               type="number"
               step="0.01"
-              className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right text-sm font-serif tabular-nums"
+              className="w-20 rounded-md border border-ledger-rule bg-transparent px-2 py-1 text-right text-sm font-mono text-ledger-ink tabular-nums"
               value={draftOr(`price-${item.id}`, centsToDollarsInput(item.priceCents))}
               onChange={(e) => {
                 setDraft(`price-${item.id}`, e.target.value);
@@ -211,7 +211,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             />
             <button
               onClick={() => removeItem(item.id)}
-              className="text-ledger-inkFaint hover:text-red-600"
+              className="text-ledger-inkFaint hover:text-red-400"
               aria-label={`Remove ${item.name}`}
             >
               ✕
@@ -230,7 +230,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             <li
               key={a.id}
               className={`flex items-center gap-2 rounded-lg border p-2 ${
-                a.kind === "discount" ? "border-brand-300 bg-brand-50" : "border-ledger-rule bg-white"
+                a.kind === "discount" ? "border-brand-300 bg-brand-50" : "border-ledger-rule bg-ledger-surface"
               }`}
             >
               <span className="text-xs text-ledger-inkFaint" aria-hidden>
@@ -244,7 +244,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
               <input
                 type="number"
                 step="0.01"
-                className="w-20 rounded-md border border-ledger-rule bg-white px-2 py-1 text-right text-sm font-serif tabular-nums"
+                className="w-20 rounded-md border border-ledger-rule bg-ledger-surface px-2 py-1 text-right text-sm font-mono tabular-nums"
                 value={draftOr(`adj-${a.id}`, centsToDollarsInput(a.amountCents))}
                 onChange={(e) => {
                   setDraft(`adj-${a.id}`, e.target.value);
@@ -254,7 +254,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
               />
               <button
                 onClick={() => removeAdjustment(a.id)}
-                className="text-ledger-inkFaint hover:text-red-600"
+                className="text-ledger-inkFaint hover:text-red-400"
                 aria-label={`Remove ${a.label}`}
               >
                 ✕
@@ -274,23 +274,22 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       </div>
 
       {tipCents === 0 && (
-        <p className="flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
-          <span aria-hidden>💡</span>
+        <p className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">
           Most receipts don&apos;t print the tip — add yours below so everyone&apos;s split is accurate.
         </p>
       )}
 
-      <div className="mt-2 grid grid-cols-2 gap-3 rounded-lg border border-ledger-rule bg-white p-3 text-sm">
+      <div className="mt-2 grid grid-cols-2 gap-3 rounded-lg border border-ledger-rule bg-ledger-surface p-3 text-sm">
         <div className="col-span-2 flex items-center justify-between">
           <span>Subtotal</span>
-          <span className="font-serif font-medium tabular-nums">{formatCents(itemsSubtotalCents)}</span>
+          <span className="font-mono font-medium tabular-nums">{formatCents(itemsSubtotalCents)}</span>
         </div>
         <label className="flex items-center justify-between gap-2">
           Tax
           <input
             type="number"
             step="0.01"
-            className="w-20 rounded-md border border-ledger-rule px-2 py-1 text-right font-serif tabular-nums"
+            className="w-20 rounded-md border border-ledger-rule bg-transparent px-2 py-1 text-right font-mono text-ledger-ink tabular-nums"
             value={draftOr("tax", centsToDollarsInput(taxCents))}
             onChange={(e) => {
               setDraft("tax", e.target.value);
@@ -305,8 +304,8 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             <input
               type="number"
               step="0.01"
-              className={`w-20 rounded-md border px-2 py-1 text-right font-serif tabular-nums ${
-                tipCents === 0 ? "border-amber-400 ring-1 ring-amber-200" : "border-ledger-rule"
+              className={`w-20 rounded-md border bg-transparent px-2 py-1 text-right font-mono text-ledger-ink tabular-nums ${
+                tipCents === 0 ? "border-amber-400 ring-1 ring-amber-400/30" : "border-ledger-rule"
               }`}
               value={draftOr("tip", centsToDollarsInput(tipCents))}
               onChange={(e) => {
@@ -330,7 +329,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
                   }}
                   className={`rounded-full border px-2 py-0.5 text-xs tabular-nums transition ${
                     active
-                      ? "border-brand-600 bg-brand-600 text-white"
+                      ? "border-brand-600 bg-brand-600 text-[#2b3a34]"
                       : "border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-700"
                   }`}
                 >
@@ -342,14 +341,14 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
         </div>
         <div className="col-span-2 flex items-center justify-between border-t border-ledger-ruleSoft pt-2 font-semibold">
           <span>Total</span>
-          <span className="font-serif tabular-nums">{formatCents(totalCents)}</span>
+          <span className="font-mono tabular-nums">{formatCents(totalCents)}</span>
         </div>
       </div>
 
       <button
         onClick={handleNext}
         disabled={items.length === 0}
-        className="mt-auto w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
         Next: Add people
       </button>

@@ -34,8 +34,8 @@ export default function QuickSplitEntry({ onNext, onBack }: Props) {
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-ledger-inkSoft">Bill total</span>
-        <div className="flex items-center gap-1 rounded-lg border border-ledger-rule bg-white px-3 py-2 focus-within:border-brand-500">
-          <span className="font-serif text-lg text-ledger-inkFaint">$</span>
+        <div className="flex items-center gap-1 rounded-lg border border-ledger-rule bg-ledger-surface px-3 py-2 focus-within:border-brand-500">
+          <span className="font-mono text-lg text-ledger-inkFaint">$</span>
           <input
             type="number"
             step="0.01"
@@ -48,7 +48,7 @@ export default function QuickSplitEntry({ onNext, onBack }: Props) {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            className="flex-1 border-none bg-transparent font-serif text-lg tabular-nums text-ledger-ink focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="flex-1 border-none bg-transparent font-mono text-lg tabular-nums text-ledger-ink focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
       </label>
@@ -60,7 +60,7 @@ export default function QuickSplitEntry({ onNext, onBack }: Props) {
       <button
         onClick={handleSubmit}
         disabled={!canContinue}
-        className="mt-auto w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
         Next: Add people
       </button>

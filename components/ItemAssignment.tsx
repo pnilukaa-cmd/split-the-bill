@@ -73,13 +73,13 @@ export default function ItemAssignment({
         {receipt.items.map((item) => {
           const assigned = assignedTo(item.id);
           return (
-            <li key={item.id} className="rounded-lg border border-ledger-rule bg-white p-3">
+            <li key={item.id} className="rounded-lg border border-ledger-rule bg-ledger-surface p-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-ledger-ink">
                   {item.name}
                   {item.quantity > 1 ? ` ×${item.quantity}` : ""}
                 </span>
-                <span className="font-serif text-sm tabular-nums text-ledger-inkSoft">
+                <span className="font-mono text-sm tabular-nums text-ledger-inkSoft">
                   {formatCents(item.priceCents)}
                 </span>
               </div>
@@ -92,7 +92,7 @@ export default function ItemAssignment({
                       onClick={() => toggle(item.id, p.id)}
                       className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition ${
                         active
-                          ? "bg-brand-600 text-white"
+                          ? "bg-brand-600 text-[#2b3a34]"
                           : "bg-ledger-paperMuted text-ledger-inkSoft hover:bg-ledger-ruleSoft"
                       }`}
                     >
@@ -108,7 +108,7 @@ export default function ItemAssignment({
                   Everyone
                 </button>
               </div>
-              {assigned.length === 0 && <p className="mt-1 text-xs text-amber-600">Not assigned yet</p>}
+              {assigned.length === 0 && <p className="mt-1 text-xs text-amber-300">Not assigned yet</p>}
 
               {item.quantity > 1 && assigned.length > 1 && (
                 <div className="mt-2 rounded-md bg-ledger-paperMuted p-2">
@@ -135,7 +135,7 @@ export default function ItemAssignment({
                             >
                               −
                             </button>
-                            <span className="w-4 text-center font-serif tabular-nums">{weight}</span>
+                            <span className="w-4 text-center font-mono tabular-nums">{weight}</span>
                             <button
                               type="button"
                               aria-label={`More units for ${person.name}`}
@@ -158,7 +158,7 @@ export default function ItemAssignment({
 
       <button
         onClick={onNext}
-        className="mt-auto w-full rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700"
       >
         {unassignedCount > 0
           ? `See split (${unassignedCount} item${unassignedCount === 1 ? "" : "s"} unassigned)`

@@ -32,7 +32,7 @@ export default function ShareSplit({ receipt, people, assignments, itemWeights, 
   useEffect(() => {
     if (!shareUrl) return;
     let cancelled = false;
-    QRCode.toDataURL(shareUrl, { width: 200, margin: 1, color: { dark: "#1c241f", light: "#ffffff" } })
+    QRCode.toDataURL(shareUrl, { width: 200, margin: 1, color: { dark: "#2b3a34", light: "#ffffff" } })
       .then((dataUrl) => {
         if (!cancelled) setQrDataUrl(dataUrl);
       })
@@ -71,26 +71,24 @@ export default function ShareSplit({ receipt, people, assignments, itemWeights, 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full rounded-xl border border-brand-500 px-4 py-2.5 font-semibold text-brand-700 transition hover:bg-brand-50"
+        className="w-full rounded-md border border-brand-500 px-4 py-2.5 font-semibold text-brand-700 transition hover:bg-brand-50"
       >
-        📤 Share this split
+        Share this split
       </button>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-ledger-rule bg-white p-4">
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-ledger-rule bg-ledger-surface p-4">
       <p className="text-center text-sm text-ledger-inkSoft">
         Anyone with this link sees the split — no login, nothing saved on a server.
       </p>
 
       {qrDataUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={qrDataUrl}
-          alt="QR code linking to this split"
-          className="h-40 w-40 rounded-lg border border-ledger-ruleSoft"
-        />
+        <div className="rounded-md bg-white p-2 shadow-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={qrDataUrl} alt="QR code linking to this split" className="h-36 w-36" />
+        </div>
       )}
 
       <div className="flex w-full gap-2">
@@ -102,7 +100,7 @@ export default function ShareSplit({ receipt, people, assignments, itemWeights, 
         />
         <button
           onClick={handleShareOrCopy}
-          className="shrink-0 rounded-md bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700"
+          className="shrink-0 rounded-md bg-brand-600 px-3 py-1.5 text-sm font-semibold text-[#2b3a34] hover:bg-brand-700"
         >
           {canNativeShare ? "Share" : copied === "main" ? "Copied!" : "Copy"}
         </button>

@@ -17,7 +17,7 @@ export default function StepHeader({ title, subtitle, onBack }: Props) {
         </button>
       )}
       <div>
-        <h2 className="font-serif text-lg font-semibold text-ledger-ink">{title}</h2>
+        <h2 className="font-hand text-2xl text-ledger-ink">{title}</h2>
         {subtitle && <p className="text-sm text-ledger-inkSoft">{subtitle}</p>}
       </div>
     </div>
