@@ -41,6 +41,24 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
     undoTimerRef.current = setTimeout(() => setLastRemoved(null), UNDO_TIMEOUT_MS);
   }
 
+  // A fixed auto-dismiss on a banner with an actionable control fails
+  // WCAG 2.2.1 (Timing Adjustable) for keyboard/screen-reader users who
+  // can't reach "Undo" within 6 seconds — pause the clock while it has
+  // focus, and only start counting down again once focus moves on.
+  // (Hover-based pausing was tried and dropped: removing an item reflows
+  // the page under a stationary pointer, which can fire mouseenter with no
+  // real user intent and pause the timer forever.)
+  function pauseUndoClear() {
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+  }
+
+  function resumeUndoClear() {
+    if (lastRemoved) scheduleUndoClear();
+  }
+
   function undoRemove() {
     if (!lastRemoved) return;
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -165,7 +183,11 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       )}
 
       {lastRemoved && (
-        <div className="flex items-center justify-between rounded-lg bg-ledger-paperMuted px-4 py-2 text-sm text-ledger-ink">
+        <div
+          className="flex items-center justify-between rounded-lg bg-ledger-paperMuted px-4 py-2 text-sm text-ledger-ink"
+          onFocus={pauseUndoClear}
+          onBlur={resumeUndoClear}
+        >
           <span>
             Removed &ldquo;{lastRemoved.kind === "item" ? lastRemoved.value.name : lastRemoved.value.label}
             &rdquo;

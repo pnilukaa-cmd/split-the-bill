@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { buildShareUrl } from "@/lib/share";
 import { Assignments, ItemWeights, ParsedReceipt, Person, PersonTotal } from "@/lib/types";
+import { PayoutHandles, savePayoutHandles } from "@/lib/payout";
 
 interface Props {
   receipt: ParsedReceipt;
@@ -11,9 +12,19 @@ interface Props {
   assignments: Assignments;
   itemWeights: ItemWeights;
   totals: PersonTotal[];
+  payouts: PayoutHandles;
+  onPayoutsChange: (payouts: PayoutHandles) => void;
 }
 
-export default function ShareSplit({ receipt, people, assignments, itemWeights, totals }: Props) {
+export default function ShareSplit({
+  receipt,
+  people,
+  assignments,
+  itemWeights,
+  totals,
+  payouts,
+  onPayoutsChange,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -24,10 +35,16 @@ export default function ShareSplit({ receipt, people, assignments, itemWeights, 
     setCanNativeShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
   }, []);
 
+  function updatePayout(field: keyof PayoutHandles, value: string) {
+    const next = { ...payouts, [field]: value || undefined };
+    onPayoutsChange(next);
+    savePayoutHandles(next);
+  }
+
   useEffect(() => {
     if (!open) return;
-    setShareUrl(buildShareUrl({ receipt, people, assignments, itemWeights }));
-  }, [open, receipt, people, assignments, itemWeights]);
+    setShareUrl(buildShareUrl({ receipt, people, assignments, itemWeights, organizerPayouts: payouts }));
+  }, [open, receipt, people, assignments, itemWeights, payouts]);
 
   useEffect(() => {
     if (!shareUrl) return;
@@ -106,6 +123,26 @@ export default function ShareSplit({ receipt, people, assignments, itemWeights, 
         </button>
       </div>
 
+      <div className="w-full border-t border-dashed border-ledger-rule pt-3">
+        <p className="mb-1.5 text-xs font-medium text-ledger-inkFaint">
+          Add your payout handle so people can pay you directly (saved on this device only)
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={payouts.venmo ?? ""}
+            onChange={(e) => updatePayout("venmo", e.target.value)}
+            placeholder="Venmo handle"
+            className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-ink placeholder:text-ledger-inkFaint focus:border-brand-500 focus:outline-none"
+          />
+          <input
+            value={payouts.paypal ?? ""}
+            onChange={(e) => updatePayout("paypal", e.target.value)}
+            placeholder="PayPal.me handle"
+            className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-ink placeholder:text-ledger-inkFaint focus:border-brand-500 focus:outline-none"
+          />
+        </div>
+      </div>
+
       {people.length > 1 && (
         <div className="w-full">
           <p className="mb-1 text-xs font-medium text-ledger-inkFaint">Or send someone just their total:</p>
@@ -115,7 +152,13 @@ export default function ShareSplit({ receipt, people, assignments, itemWeights, 
                 <span className="text-ledger-inkSoft">{t.name}</span>
                 <button
                   onClick={() =>
-                    copy(buildShareUrl({ receipt, people, assignments, itemWeights }, t.personId), t.personId)
+                    copy(
+                      buildShareUrl(
+                        { receipt, people, assignments, itemWeights, organizerPayouts: payouts },
+                        t.personId
+                      ),
+                      t.personId
+                    )
                   }
                   className="text-xs font-medium text-brand-700 hover:underline"
                 >

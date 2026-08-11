@@ -1,11 +1,14 @@
 import LZString from "lz-string";
 import { Assignments, ItemWeights, ParsedReceipt, Person } from "./types";
+import { PayoutHandles } from "./payout";
 
 export interface SharePayload {
   receipt: ParsedReceipt;
   people: Person[];
   assignments: Assignments;
   itemWeights: ItemWeights;
+  /** The organizer's own Venmo/PayPal handle, if they set one before sharing. */
+  organizerPayouts?: PayoutHandles;
 }
 
 const HASH_KEY = "s=";
@@ -27,6 +30,7 @@ export function decodeShareState(encoded: string): SharePayload | null {
       people: parsed.people,
       assignments: parsed.assignments ?? {},
       itemWeights: parsed.itemWeights ?? {},
+      organizerPayouts: parsed.organizerPayouts ?? undefined,
     };
   } catch {
     return null;

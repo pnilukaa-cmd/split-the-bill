@@ -1,10 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Assignments, ItemWeights, ParsedReceipt, Person } from "@/lib/types";
 import { computeSplit, formatCents } from "@/lib/split";
+import { loadPayoutHandles, PayoutHandles } from "@/lib/payout";
 import PersonAvatar from "./PersonAvatar";
+import PayLinks from "./PayLinks";
 import StepHeader from "./StepHeader";
 import ShareSplit from "./ShareSplit";
+import InstallPrompt from "./InstallPrompt";
 
 interface Props {
   receipt: ParsedReceipt;
@@ -19,10 +23,17 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
   const { totals, unassignedItemIds } = computeSplit(receipt, people, assignments, itemWeights);
   const unassignedItems = receipt.items.filter((item) => unassignedItemIds.includes(item.id));
   const iconByPersonId = new Map(people.map((p) => [p.id, p.icon]));
+  const [payouts, setPayouts] = useState<PayoutHandles>({});
+
+  useEffect(() => {
+    setPayouts(loadPayoutHandles());
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col gap-4">
       <StepHeader title="Here's the split" subtitle="Proportional tax and tip included." onBack={onBack} />
+
+      <InstallPrompt />
 
       {unassignedItems.length > 0 && (
         <div className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">
@@ -55,6 +66,7 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
                 </span>
               )}
             </div>
+            <PayLinks payouts={payouts} amountCents={t.totalCents} note={`Split the Bill — ${t.name}`} />
           </li>
         ))}
       </ul>
@@ -74,7 +86,15 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
         Settle up however you like — Venmo, cash, or whatever works.
       </p>
 
-      <ShareSplit receipt={receipt} people={people} assignments={assignments} itemWeights={itemWeights} totals={totals} />
+      <ShareSplit
+        receipt={receipt}
+        people={people}
+        assignments={assignments}
+        itemWeights={itemWeights}
+        totals={totals}
+        payouts={payouts}
+        onPayoutsChange={setPayouts}
+      />
 
       <button
         onClick={onStartOver}

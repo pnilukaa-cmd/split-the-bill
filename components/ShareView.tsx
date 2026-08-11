@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { SharePayload } from "@/lib/share";
 import { computeSplit, formatCents } from "@/lib/split";
 import PersonAvatar from "./PersonAvatar";
+import PayLinks from "./PayLinks";
 
 interface Props {
   payload: SharePayload;
@@ -12,7 +13,7 @@ interface Props {
 }
 
 export default function ShareView({ payload, highlightPersonId, onStartOwn }: Props) {
-  const { receipt, people, assignments, itemWeights } = payload;
+  const { receipt, people, assignments, itemWeights, organizerPayouts } = payload;
   const { totals, unassignedItemIds } = computeSplit(receipt, people, assignments, itemWeights);
   const unassignedItems = receipt.items.filter((item) => unassignedItemIds.includes(item.id));
   const iconByPersonId = new Map(people.map((p) => [p.id, p.icon]));
@@ -69,6 +70,11 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
                 </span>
               )}
             </div>
+            <PayLinks
+              payouts={organizerPayouts ?? {}}
+              amountCents={t.totalCents}
+              note={`Split the Bill — ${t.name}`}
+            />
           </li>
         ))}
       </ul>
