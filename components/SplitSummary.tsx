@@ -9,6 +9,7 @@ import PayLinks from "./PayLinks";
 import StepHeader from "./StepHeader";
 import ShareSplit from "./ShareSplit";
 import InstallPrompt from "./InstallPrompt";
+import TipAsk from "./TipAsk";
 
 interface Props {
   receipt: ParsedReceipt;
@@ -81,6 +82,8 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
           <span className="font-hand text-xl text-brand-500">Balanced to the cent</span>
         </div>
       )}
+
+      <TipAsk />
 
       <p className="text-center text-xs text-ledger-inkFaint">
         Settle up however you like — Venmo, cash, or whatever works.
