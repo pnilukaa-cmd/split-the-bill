@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Nothing_You_Could_Do, Work_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <ServiceWorkerRegister />
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 py-6 sm:max-w-lg">{children}</div>
+        <Analytics />
       </body>
     </html>
   );
