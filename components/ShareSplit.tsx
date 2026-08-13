@@ -25,7 +25,7 @@ export default function ShareSplit({
   payouts,
   onPayoutsChange,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -42,9 +42,8 @@ export default function ShareSplit({
   }
 
   useEffect(() => {
-    if (!open) return;
     setShareUrl(buildShareUrl({ receipt, people, assignments, itemWeights, organizerPayouts: payouts }));
-  }, [open, receipt, people, assignments, itemWeights, payouts]);
+  }, [receipt, people, assignments, itemWeights, payouts]);
 
   useEffect(() => {
     if (!shareUrl) return;
@@ -84,90 +83,82 @@ export default function ShareSplit({
     copy(shareUrl, "main");
   }
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="w-full rounded-md border border-brand-500 px-4 py-2.5 font-semibold text-brand-700 transition hover:bg-brand-50"
-      >
-        Share this split
-      </button>
-    );
-  }
-
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-ledger-rule bg-ledger-surface p-4">
-      <p className="text-center text-sm text-ledger-inkSoft">
-        Anyone with this link sees the split — no login, nothing saved on a server.
-      </p>
+      <p className="text-center text-sm font-medium text-ledger-ink">Hold this up — everyone scans, everyone sees their total</p>
 
       {qrDataUrl && (
         <div className="rounded-md bg-white p-2 shadow-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrDataUrl} alt="QR code linking to this split" className="h-36 w-36" />
+          <img src={qrDataUrl} alt="QR code linking to this split" className="h-40 w-40" />
         </div>
       )}
 
-      <div className="flex w-full gap-2">
-        <input
-          readOnly
-          value={shareUrl}
-          onFocus={(e) => e.target.select()}
-          className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-inkSoft"
-        />
-        <button
-          onClick={handleShareOrCopy}
-          className="shrink-0 rounded-md bg-brand-600 px-3 py-1.5 text-sm font-semibold text-[#2b3a34] hover:bg-brand-700"
-        >
-          {canNativeShare ? "Share" : copied === "main" ? "Copied!" : "Copy"}
-        </button>
-      </div>
+      <button
+        onClick={handleShareOrCopy}
+        className="w-full rounded-md bg-brand-600 px-4 py-2.5 font-semibold text-[#2b3a34] transition hover:bg-brand-700"
+      >
+        {canNativeShare ? "Share link instead" : copied === "main" ? "Copied!" : "Copy link instead"}
+      </button>
 
-      <div className="w-full border-t border-dashed border-ledger-rule pt-3">
-        <p className="mb-1.5 text-xs font-medium text-ledger-inkFaint">
-          Add your payout handle so people can pay you directly (saved on this device only)
-        </p>
-        <div className="flex gap-2">
-          <input
-            value={payouts.venmo ?? ""}
-            onChange={(e) => updatePayout("venmo", e.target.value)}
-            placeholder="Venmo handle"
-            className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-ink placeholder:text-ledger-inkFaint focus:border-brand-500 focus:outline-none"
-          />
-          <input
-            value={payouts.paypal ?? ""}
-            onChange={(e) => updatePayout("paypal", e.target.value)}
-            placeholder="PayPal.me handle"
-            className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-ink placeholder:text-ledger-inkFaint focus:border-brand-500 focus:outline-none"
-          />
-        </div>
-      </div>
+      <p className="text-center text-xs text-ledger-inkFaint">No login, nothing saved on a server.</p>
 
-      {people.length > 1 && (
-        <div className="w-full">
-          <p className="mb-1 text-xs font-medium text-ledger-inkFaint">Or send someone just their total:</p>
-          <ul className="flex flex-col gap-1">
-            {totals.map((t) => (
-              <li key={t.personId} className="flex items-center justify-between text-sm">
-                <span className="text-ledger-inkSoft">{t.name}</span>
-                <button
-                  onClick={() =>
-                    copy(
-                      buildShareUrl(
-                        { receipt, people, assignments, itemWeights, organizerPayouts: payouts },
-                        t.personId
-                      ),
-                      t.personId
-                    )
-                  }
-                  className="text-xs font-medium text-brand-700 hover:underline"
-                >
-                  {copied === t.personId ? "Copied!" : "Copy link"}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <button
+        onClick={() => setShowMore((v) => !v)}
+        className="text-xs font-medium text-brand-700 hover:underline"
+      >
+        {showMore ? "Fewer options" : "More options"}
+      </button>
+
+      {showMore && (
+        <>
+          <div className="w-full border-t border-dashed border-ledger-rule pt-3">
+            <p className="mb-1.5 text-xs font-medium text-ledger-inkFaint">
+              Add your payout handle so people can pay you directly (saved on this device only)
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={payouts.venmo ?? ""}
+                onChange={(e) => updatePayout("venmo", e.target.value)}
+                placeholder="Venmo handle"
+                className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-ink placeholder:text-ledger-inkFaint focus:border-brand-500 focus:outline-none"
+              />
+              <input
+                value={payouts.paypal ?? ""}
+                onChange={(e) => updatePayout("paypal", e.target.value)}
+                placeholder="PayPal.me handle"
+                className="min-w-0 flex-1 rounded-md border border-ledger-rule bg-ledger-paperMuted px-2 py-1.5 text-xs text-ledger-ink placeholder:text-ledger-inkFaint focus:border-brand-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {people.length > 1 && (
+            <div className="w-full">
+              <p className="mb-1 text-xs font-medium text-ledger-inkFaint">Or send someone just their total:</p>
+              <ul className="flex flex-col gap-1">
+                {totals.map((t) => (
+                  <li key={t.personId} className="flex items-center justify-between text-sm">
+                    <span className="text-ledger-inkSoft">{t.name}</span>
+                    <button
+                      onClick={() =>
+                        copy(
+                          buildShareUrl(
+                            { receipt, people, assignments, itemWeights, organizerPayouts: payouts },
+                            t.personId
+                          ),
+                          t.personId
+                        )
+                      }
+                      className="text-xs font-medium text-brand-700 hover:underline"
+                    >
+                      {copied === t.personId ? "Copied!" : "Copy link"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
