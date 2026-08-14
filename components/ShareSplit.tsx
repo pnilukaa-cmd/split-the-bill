@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { buildShareUrl } from "@/lib/share";
+import { formatCents } from "@/lib/split";
 import { Assignments, ItemWeights, ParsedReceipt, Person, PersonTotal } from "@/lib/types";
 import { PayoutHandles, savePayoutHandles } from "@/lib/payout";
 
@@ -71,9 +72,13 @@ export default function ShareSplit({
   }
 
   async function handleShareOrCopy() {
+    const shareText =
+      people.length > 1
+        ? `We split ${formatCents(receipt.totalCents)} ${people.length} ways — here's what everyone owes:`
+        : `Here's the ${formatCents(receipt.totalCents)} split:`;
     if (canNativeShare) {
       try {
-        await navigator.share({ title: "Split the Bill", text: "Here's how we split the bill", url: shareUrl });
+        await navigator.share({ title: "Split the Bill", text: shareText, url: shareUrl });
         return;
       } catch {
         // User backed out of the share sheet — leave the panel open so they can copy instead.
