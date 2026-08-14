@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { track } from "@vercel/analytics";
 import { SharePayload } from "@/lib/share";
 import { computeSplit, formatCents } from "@/lib/split";
 import PersonAvatar from "./PersonAvatar";
@@ -21,7 +22,16 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
 
   useEffect(() => {
     highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    track("share_view_loaded", { peopleCount: people.length, highlighted: highlightPersonId !== null });
+    // Runs once on mount to measure how many opened share links actually get viewed —
+    // deliberately not re-firing on prop changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleStartOwn() {
+    track("start_own_bill_clicked");
+    onStartOwn();
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -89,7 +99,7 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
       </p>
 
       <button
-        onClick={onStartOwn}
+        onClick={handleStartOwn}
         className="mt-auto w-full rounded-md border border-ledger-ink px-6 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-surface"
       >
         Split your own bill
