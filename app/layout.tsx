@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { siteUrl } from "@/lib/site";
 
 const chalkHand = Nothing_You_Could_Do({
   subsets: ["latin"],
@@ -23,17 +24,17 @@ const chalkMono = IBM_Plex_Mono({
   variable: "--font-chalk-mono",
 });
 
-const siteHost = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? "localhost:3000";
-const siteUrl = new URL(`http${siteHost.startsWith("localhost") ? "" : "s"}://${siteHost}`);
-
-const description = "Snap a photo of the receipt, assign items, split fairly — no login, nothing saved.";
+const title = "Split the Bill – Free Receipt Splitter, No Login Needed";
+const description =
+  "Free bill splitter for restaurants and group hangouts. Snap a photo of the receipt, assign items, and split fairly — no login, no app to download, nothing saved.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
-  title: "Split the Bill",
+  title,
   description,
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Split the Bill",
+    title,
     description,
     url: "/",
     siteName: "Split the Bill",
@@ -42,10 +43,21 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Split the Bill",
+    title,
     description,
     images: ["/og-image.png"],
   },
+};
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Split the Bill",
+  description: "Snap a photo of the receipt, assign items, and split a bill fairly. No login, nothing saved.",
+  url: siteUrl.toString(),
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Any (web browser)",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
 };
 
 export const viewport: Viewport = {
@@ -58,6 +70,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${chalkHand.variable} ${chalkSans.variable} ${chalkMono.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          // Static, hardcoded object — no user input reaches this, so no escaping is needed.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </head>
       <body className="min-h-screen">
         <ServiceWorkerRegister />
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 py-6 sm:max-w-lg">{children}</div>
