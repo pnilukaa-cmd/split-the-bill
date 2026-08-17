@@ -92,7 +92,7 @@ export default function ItemAssignment({
                       onClick={() => toggle(item.id, p.id)}
                       className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm transition ${
                         active
-                          ? "bg-brand-600 text-[#2b3a34]"
+                          ? "bg-brand-600 text-brand-ink"
                           : "bg-ledger-paperMuted text-ledger-inkSoft hover:bg-ledger-ruleSoft"
                       }`}
                     >
@@ -103,51 +103,60 @@ export default function ItemAssignment({
                 })}
                 <button
                   onClick={() => assignToEveryone(item.id)}
-                  className="rounded-full border border-dashed border-ledger-rule px-3 py-1 text-sm text-ledger-inkSoft hover:border-brand-400 hover:text-brand-600"
+                  className="rounded-full border border-dashed border-ledger-rule px-3 py-1 text-sm text-ledger-inkSoft hover:border-brand-400 hover:text-ledger-accent"
                 >
                   Everyone
                 </button>
               </div>
-              {assigned.length === 0 && <p className="mt-1 text-xs text-amber-300">Not assigned yet</p>}
+              {assigned.length === 0 && (
+                <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">Not assigned yet</p>
+              )}
 
               {item.quantity > 1 && assigned.length > 1 && (
                 <div className="mt-2 rounded-md bg-ledger-paperMuted p-2">
                   <p className="text-xs text-ledger-inkFaint">
-                    Split unevenly? Set how many of the {item.quantity} units each person had.
+                    Split unevenly? Set each person&apos;s relative share below — it&apos;s a ratio, not a
+                    head count, so the numbers don&apos;t need to add up to {item.quantity}.
                   </p>
                   <div className="mt-1.5 flex flex-col gap-1">
-                    {assigned.map((personId) => {
-                      const person = people.find((p) => p.id === personId);
-                      if (!person) return null;
-                      const weight = weightFor(item.id, personId);
-                      return (
-                        <div key={personId} className="flex items-center justify-between text-sm">
-                          <span className="flex items-center gap-1.5 text-ledger-inkSoft">
-                            <PersonAvatar name={person.name} icon={person.icon} />
-                            {person.name}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              aria-label={`Fewer units for ${person.name}`}
-                              onClick={() => setWeight(item.id, personId, weight - 1, item.quantity)}
-                              className="flex h-6 w-6 items-center justify-center rounded-full border border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-600"
-                            >
-                              −
-                            </button>
-                            <span className="w-4 text-center font-mono tabular-nums">{weight}</span>
-                            <button
-                              type="button"
-                              aria-label={`More units for ${person.name}`}
-                              onClick={() => setWeight(item.id, personId, weight + 1, item.quantity)}
-                              className="flex h-6 w-6 items-center justify-center rounded-full border border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-600"
-                            >
-                              +
-                            </button>
+                    {(() => {
+                      const totalWeight = assigned.reduce((sum, id) => sum + weightFor(item.id, id), 0);
+                      return assigned.map((personId) => {
+                        const person = people.find((p) => p.id === personId);
+                        if (!person) return null;
+                        const weight = weightFor(item.id, personId);
+                        const sharePct = totalWeight > 0 ? Math.round((weight / totalWeight) * 100) : 0;
+                        return (
+                          <div key={personId} className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1.5 text-ledger-inkSoft">
+                              <PersonAvatar name={person.name} icon={person.icon} />
+                              {person.name}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                aria-label={`Smaller share for ${person.name}`}
+                                onClick={() => setWeight(item.id, personId, weight - 1, item.quantity)}
+                                className="flex h-6 w-6 items-center justify-center rounded-full border border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-ledger-accent"
+                              >
+                                −
+                              </button>
+                              <span className="w-9 text-center font-mono text-xs tabular-nums text-ledger-inkFaint">
+                                {sharePct}%
+                              </span>
+                              <button
+                                type="button"
+                                aria-label={`Larger share for ${person.name}`}
+                                onClick={() => setWeight(item.id, personId, weight + 1, item.quantity)}
+                                className="flex h-6 w-6 items-center justify-center rounded-full border border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-ledger-accent"
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               )}
@@ -158,7 +167,7 @@ export default function ItemAssignment({
 
       <button
         onClick={onNext}
-        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-brand-ink shadow-sm transition hover:bg-brand-700"
       >
         {unassignedCount > 0
           ? `See split (${unassignedCount} item${unassignedCount === 1 ? "" : "s"} unassigned)`

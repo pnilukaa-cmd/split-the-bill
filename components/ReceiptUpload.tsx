@@ -250,6 +250,24 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
         </p>
       </div>
 
+      {!reviewing && (
+        <ul className="flex w-full flex-col gap-2.5 text-left">
+          {[
+            ["Snap a photo", "Take a picture of the receipt, or pick one from your library."],
+            ["Fix anything we misread", "Line items, tax, and tip all show up editable."],
+            ["Split it fairly", "Assign items to people — everyone sees exactly what they owe."],
+          ].map(([title, detail], i) => (
+            <li key={title} className="flex items-start gap-3 rounded-lg border border-ledger-rule bg-ledger-surface p-3">
+              <span className="font-hand text-2xl leading-none text-ledger-accent">{i + 1}</span>
+              <span>
+                <span className="block text-sm font-semibold text-ledger-ink">{title}</span>
+                <span className="text-xs text-ledger-inkFaint">{detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {reviewing && (
         <ul className="flex w-full flex-col gap-2">
           {pages.map((p, i) => {
@@ -264,7 +282,11 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
                 />
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-ledger-ink">Page {i + 1}</p>
-                  {blurry && <p className="text-xs text-amber-300">This looks blurry — consider retaking it.</p>}
+                  {blurry && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      This looks blurry — consider retaking it.
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => removePage(p.id)}
@@ -313,7 +335,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
           className={
             reviewing
               ? "flex-1 rounded-md border border-ledger-rule bg-ledger-surface px-4 py-3 font-semibold text-ledger-ink shadow-sm transition hover:bg-ledger-paperMuted disabled:opacity-40"
-              : "flex-1 rounded-md bg-brand-600 px-4 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+              : "flex-1 rounded-md bg-brand-600 px-4 py-3 font-semibold text-brand-ink shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
           }
         >
           {reviewing ? "+ Add page (camera)" : loading ? status || "Working…" : "Take photo"}
@@ -337,7 +359,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
         <button
           onClick={scanReceipt}
           disabled={loading}
-          className="mt-auto w-full rounded-md bg-brand-600 px-4 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+          className="mt-auto w-full rounded-md bg-brand-600 px-4 py-3 font-semibold text-brand-ink shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
         >
           {loading ? status || "Working…" : `Scan receipt${pages.length > 1 ? ` (${pages.length} pages)` : ""}`}
         </button>
@@ -346,7 +368,7 @@ export default function ReceiptUpload({ onParsed, onQuickSplit }: Props) {
       {!reviewing && (
         <button
           onClick={onQuickSplit}
-          className="text-sm text-ledger-inkSoft underline decoration-dotted underline-offset-2 hover:text-brand-700"
+          className="text-sm text-ledger-inkSoft underline decoration-dotted underline-offset-2 hover:text-ledger-accent"
         >
           No receipt? Split a total evenly
         </button>

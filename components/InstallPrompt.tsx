@@ -71,7 +71,7 @@ export default function InstallPrompt() {
           <span className="text-ledger-inkSoft">Add Split the Bill to your phone for one tap next time.</span>
           <button
             onClick={handleInstall}
-            className="shrink-0 font-semibold text-brand-700 hover:underline"
+            className="shrink-0 font-semibold text-ledger-accent hover:underline"
           >
             Add
           </button>

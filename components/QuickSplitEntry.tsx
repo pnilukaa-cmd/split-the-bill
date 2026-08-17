@@ -60,7 +60,7 @@ export default function QuickSplitEntry({ onNext, onBack }: Props) {
       <button
         onClick={handleSubmit}
         disabled={!canContinue}
-        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-brand-ink shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
         Next: Add people
       </button>

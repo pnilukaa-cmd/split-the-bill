@@ -8,5 +8,55 @@ body {
 }
 
 body {
-  @apply bg-ledger-paper text-ledger-ink;
+  @apply bg-ledger-paper text-ledger-ink transition-colors duration-150;
+}
+
+/* Chalk Special (dark) is the default look — also the fallback before the
+   theme-init script in app/layout.tsx picks a value for `data-theme`. */
+:root,
+[data-theme="dark"] {
+  --brand-50: #3d4a35;
+  --brand-100: #48563e;
+  --brand-300: #a6924f;
+  --brand-400: #c9b467;
+  --brand-500: #e8d17a;
+  --brand-600: #e8d17a;
+  --brand-700: #f2e0a0;
+
+  --ledger-paper: #2b3a34;
+  --ledger-paper-muted: #3d4f47;
+  --ledger-surface: #34453e;
+  --ledger-rule: #eef0e64d;
+  --ledger-rule-soft: #eef0e626;
+  --ledger-ink: #eef0e6;
+  --ledger-ink-soft: #c3cdc6;
+  --ledger-ink-faint: #93a89d;
+  --ledger-brass: #e8d17a;
+  --ledger-accent: #f2e0a0;
+  --ledger-negative: #d98a72;
+}
+
+/* A light "ledger paper" counterpart — same brand, same accent hues, just
+   inverted for a bright room. Text/link colors are re-picked (not simply
+   flipped) so they still clear AA contrast against a cream page. */
+[data-theme="light"] {
+  --brand-50: #f6ecc9;
+  --brand-100: #f0e0ab;
+  --brand-300: #c9a227;
+  --brand-400: #b38a1e;
+  --brand-500: #d9b94a;
+  --brand-600: #d9b94a;
+  --brand-700: #c7a53d;
+
+  --ledger-paper: #f6f1e3;
+  --ledger-paper-muted: #ece3cd;
+  --ledger-surface: #fffdf8;
+  --ledger-rule: #2b3a3433;
+  --ledger-rule-soft: #2b3a341a;
+  --ledger-ink: #2b3a34;
+  --ledger-ink-soft: #52655c;
+  --ledger-ink-faint: #8a988f;
+  --ledger-brass: #a97f1a;
+  --ledger-accent: #8a6d1f;
+  --ledger-negative: #a8461f;
 }

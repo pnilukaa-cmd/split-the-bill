@@ -26,7 +26,7 @@ export default function TipAsk() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("tip_clicked", { amount: cents / 100 })}
-            className="rounded-full border border-ledger-rule px-3 py-1 text-xs font-semibold text-ledger-inkSoft transition hover:border-brand-400 hover:text-brand-700"
+            className="rounded-full border border-ledger-rule px-3 py-1 text-xs font-semibold text-ledger-inkSoft transition hover:border-brand-400 hover:text-ledger-accent"
           >
             ${(cents / 100).toFixed(0)}
           </a>

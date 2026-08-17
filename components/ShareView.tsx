@@ -19,6 +19,7 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
   const unassignedItems = receipt.items.filter((item) => unassignedItemIds.includes(item.id));
   const iconByPersonId = new Map(people.map((p) => [p.id, p.icon]));
   const highlightRef = useRef<HTMLLIElement>(null);
+  const you = totals.find((t) => t.personId === highlightPersonId) ?? null;
 
   useEffect(() => {
     highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -35,18 +36,33 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ledger-brass">Shared split</p>
-        <h1 className="font-hand text-3xl text-ledger-ink">Here&apos;s the split</h1>
-        <p className="mt-1 text-sm text-ledger-inkSoft">Proportional tax and tip included.</p>
-      </div>
+      {you ? (
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-brand-500 bg-brand-50 p-5 text-center">
+          <PersonAvatar name={you.name} icon={iconByPersonId.get(you.personId)} size="md" />
+          <p className="font-hand text-3xl text-ledger-ink">{you.name}, you owe</p>
+          <p className="font-mono text-4xl font-bold tabular-nums text-ledger-accent">
+            {formatCents(you.totalCents)}
+          </p>
+          <PayLinks payouts={organizerPayouts ?? {}} amountCents={you.totalCents} note={`Split the Bill — ${you.name}`} />
+        </div>
+      ) : (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ledger-brass">Shared split</p>
+          <h1 className="font-hand text-3xl text-ledger-ink">Here&apos;s the split</h1>
+          <p className="mt-1 text-sm text-ledger-inkSoft">Proportional tax and tip included.</p>
+        </div>
+      )}
 
       {unassignedItems.length > 0 && (
-        <div className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">
+        <div className="rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
           {unassignedItems.length} item{unassignedItems.length === 1 ? " isn't" : "s aren't"} assigned to
           anyone yet, so {unassignedItems.length === 1 ? "it isn't" : "they aren't"} included below:{" "}
           {unassignedItems.map((i) => i.name).join(", ")}.
         </div>
+      )}
+
+      {you && (
+        <p className="text-xs font-semibold uppercase tracking-wide text-ledger-inkFaint">Full breakdown</p>
       )}
 
       <ul className="flex flex-col gap-2">
@@ -65,7 +81,7 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
                 <PersonAvatar name={t.name} icon={iconByPersonId.get(t.personId)} size="md" />
                 {t.name}
               </span>
-              <span className="font-mono text-lg font-bold tabular-nums text-brand-700">
+              <span className="font-mono text-lg font-bold tabular-nums text-ledger-accent">
                 {formatCents(t.totalCents)}
               </span>
             </div>
@@ -74,17 +90,19 @@ export default function ShareView({ payload, highlightPersonId, onStartOwn }: Pr
               <span>Tax {formatCents(t.taxCents)}</span>
               <span>Tip {formatCents(t.tipCents)}</span>
               {t.adjustmentsCents !== 0 && (
-                <span className={t.adjustmentsCents < 0 ? "text-[#d98a72]" : undefined}>
+                <span className={t.adjustmentsCents < 0 ? "text-ledger-negative" : undefined}>
                   Adjustments {t.adjustmentsCents > 0 ? "+" : ""}
                   {formatCents(t.adjustmentsCents)}
                 </span>
               )}
             </div>
-            <PayLinks
-              payouts={organizerPayouts ?? {}}
-              amountCents={t.totalCents}
-              note={`Split the Bill — ${t.name}`}
-            />
+            {t.personId !== highlightPersonId && (
+              <PayLinks
+                payouts={organizerPayouts ?? {}}
+                amountCents={t.totalCents}
+                note={`Split the Bill — ${t.name}`}
+              />
+            )}
           </li>
         ))}
       </ul>

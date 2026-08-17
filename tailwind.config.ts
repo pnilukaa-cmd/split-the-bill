@@ -2,29 +2,38 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: ["class", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
         brand: {
-          50: "#3d4a35",
-          100: "#48563e",
-          300: "#a6924f",
-          400: "#c9b467",
-          500: "#e8d17a",
-          600: "#e8d17a",
-          700: "#f2e0a0",
+          50: "var(--brand-50)",
+          100: "var(--brand-100)",
+          300: "var(--brand-300)",
+          400: "var(--brand-400)",
+          500: "var(--brand-500)",
+          600: "var(--brand-600)",
+          700: "var(--brand-700)",
+          // Text color for content sitting on a brand-fill background (buttons,
+          // active chips). Fixed rather than themed: brand-500/600 stays a
+          // similar mid-light gold in both themes, so dark ink keeps working.
+          ink: "#2b3a34",
         },
         ledger: {
-          paper: "#2b3a34",
-          paperMuted: "#3d4f47",
-          surface: "#34453e",
-          rule: "#eef0e64d",
-          ruleSoft: "#eef0e626",
-          ink: "#eef0e6",
-          inkSoft: "#c3cdc6",
-          inkFaint: "#93a89d",
-          brass: "#e8d17a",
-          brassLight: "#4a4527",
+          paper: "var(--ledger-paper)",
+          paperMuted: "var(--ledger-paper-muted)",
+          surface: "var(--ledger-surface)",
+          rule: "var(--ledger-rule)",
+          ruleSoft: "var(--ledger-rule-soft)",
+          ink: "var(--ledger-ink)",
+          inkSoft: "var(--ledger-ink-soft)",
+          inkFaint: "var(--ledger-ink-faint)",
+          brass: "var(--ledger-brass)",
+          // Dedicated text/link accent, separate from the brand-* fill scale —
+          // brand-600/700 stay light-gold for button fills in both themes, which
+          // reads fine as a background but fails contrast as text on a light page.
+          accent: "var(--ledger-accent)",
+          negative: "var(--ledger-negative)",
         },
       },
       fontFamily: {

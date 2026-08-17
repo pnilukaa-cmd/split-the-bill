@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Person } from "@/lib/types";
 import { PERSON_ICONS } from "@/lib/avatar";
 import { loadRecentPeople, rememberPerson, RecentPerson } from "@/lib/recentPeople";
+import { formatCents } from "@/lib/split";
 import PersonAvatar from "./PersonAvatar";
 import StepHeader from "./StepHeader";
 
@@ -13,9 +14,21 @@ interface Props {
   onNext: () => void;
   onBack: () => void;
   nextLabel?: string;
+  /** The receipt total, if known — used only for the "split evenly" preview below the list. */
+  receiptTotalCents?: number;
+  /** True when there's no item-assignment step after this one, so the even split shown is the real, final one. */
+  evenSplitIsFinal?: boolean;
 }
 
-export default function PeopleManager({ people, onChange, onNext, onBack, nextLabel = "Next: Assign items" }: Props) {
+export default function PeopleManager({
+  people,
+  onChange,
+  onNext,
+  onBack,
+  nextLabel = "Next: Assign items",
+  receiptTotalCents = 0,
+  evenSplitIsFinal = false,
+}: Props) {
   const [name, setName] = useState("");
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentPerson[]>([]);
@@ -87,7 +100,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
         />
         <button
           type="submit"
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-[#2b3a34] hover:bg-brand-700"
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-brand-ink hover:bg-brand-700"
         >
           Add
         </button>
@@ -102,7 +115,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
                 <button
                   type="button"
                   onClick={() => addFromRecent(r)}
-                  className="flex items-center gap-1.5 rounded-full border border-dashed border-ledger-rule bg-ledger-surface py-1 pl-1 pr-3 text-sm text-ledger-inkSoft transition hover:border-brand-400 hover:text-brand-700"
+                  className="flex items-center gap-1.5 rounded-full border border-dashed border-ledger-rule bg-ledger-surface py-1 pl-1 pr-3 text-sm text-ledger-inkSoft transition hover:border-brand-400 hover:text-ledger-accent"
                 >
                   <PersonAvatar name={r.name} icon={r.icon} />
                   {r.name}
@@ -117,7 +130,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
         {people.map((p) => (
           <li
             key={p.id}
-            className="flex items-center gap-2 rounded-full bg-brand-50 py-1 pl-1 pr-3 text-sm text-brand-700"
+            className="flex items-center gap-2 rounded-full bg-brand-50 py-1 pl-1 pr-3 text-sm text-ledger-accent"
           >
             <button
               type="button"
@@ -131,7 +144,7 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
             {p.name}
             <button
               onClick={() => removePerson(p.id)}
-              className="text-brand-400 hover:text-red-400"
+              className="text-ledger-accent hover:text-red-400"
               aria-label={`Remove ${p.name}`}
             >
               ✕
@@ -140,48 +153,69 @@ export default function PeopleManager({ people, onChange, onNext, onBack, nextLa
         ))}
       </ul>
 
-      {pickerPerson && (
-        <div ref={pickerRef} className="rounded-lg border border-ledger-rule bg-ledger-surface p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium text-ledger-inkSoft">Pick an icon for {pickerPerson.name}</p>
-            <button
-              onClick={() => setPickerFor(null)}
-              className="text-xs text-ledger-inkFaint hover:text-ledger-ink"
-            >
-              Done
-            </button>
-          </div>
-          <div className="grid grid-cols-8 gap-1">
-            {PERSON_ICONS.map((icon) => (
+      {/* Fills whatever's left below the chips instead of leaving it blank above a
+          bottom-pinned button — the picker and the split preview center inside it. */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-4">
+        {pickerPerson && (
+          <div ref={pickerRef} className="w-full rounded-lg border border-ledger-rule bg-ledger-surface p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-medium text-ledger-inkSoft">Pick an icon for {pickerPerson.name}</p>
               <button
-                key={icon}
-                type="button"
-                onClick={() => setIcon(pickerPerson.id, icon)}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-lg hover:bg-ledger-paperMuted"
+                onClick={() => setPickerFor(null)}
+                className="text-xs text-ledger-inkFaint hover:text-ledger-ink"
               >
-                {icon}
+                Done
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setIcon(pickerPerson.id, undefined)}
-              aria-label="Use default color instead of an icon"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-dashed border-ledger-rule text-xs text-ledger-inkFaint hover:bg-ledger-paperMuted"
-            >
-              ✕
-            </button>
+            </div>
+            <div className="grid grid-cols-8 gap-1">
+              {PERSON_ICONS.map((icon) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={() => setIcon(pickerPerson.id, icon)}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-lg hover:bg-ledger-paperMuted"
+                >
+                  {icon}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setIcon(pickerPerson.id, undefined)}
+                aria-label="Use default color instead of an icon"
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-dashed border-ledger-rule text-xs text-ledger-inkFaint hover:bg-ledger-paperMuted"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {people.length === 0 && (
-        <p className="text-sm text-ledger-inkFaint">Add at least one person to continue.</p>
-      )}
+        {people.length > 1 && receiptTotalCents > 0 && (
+          <div className="w-full rounded-lg border border-dashed border-ledger-rule bg-ledger-surface p-4 text-center">
+            <p className="text-xs text-ledger-inkFaint">
+              {evenSplitIsFinal ? `Split evenly across ${people.length} people` : `If split evenly across ${people.length} people`}
+            </p>
+            <p className="font-hand text-3xl text-ledger-ink">
+              {formatCents(Math.round(receiptTotalCents / people.length))}{" "}
+              <span className="text-base text-ledger-inkFaint">each</span>
+            </p>
+            {!evenSplitIsFinal && (
+              <p className="mt-1 text-xs text-ledger-inkFaint">
+                Next step lets you assign items instead, if it wasn&apos;t even.
+              </p>
+            )}
+          </div>
+        )}
+
+        {people.length === 0 && (
+          <p className="text-sm text-ledger-inkFaint">Add at least one person to continue.</p>
+        )}
+      </div>
 
       <button
         onClick={onNext}
         disabled={people.length === 0}
-        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        className="w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-brand-ink shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
         {nextLabel}
       </button>

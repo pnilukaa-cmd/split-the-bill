@@ -30,6 +30,21 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
   const [lastRemoved, setLastRemoved] = useState<RemovedEntry | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Newly-added discount/charge rows start at $0.00 — jump straight to that
+  // amount field instead of leaving focus wherever it was before the tap.
+  const adjustmentAmountRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [focusAdjustmentId, setFocusAdjustmentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!focusAdjustmentId) return;
+    const input = adjustmentAmountRefs.current[focusAdjustmentId];
+    if (input) {
+      input.focus();
+      input.select();
+    }
+    setFocusAdjustmentId(null);
+  }, [adjustments, focusAdjustmentId]);
+
   useEffect(() => {
     return () => {
       if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -129,10 +144,12 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
   }
 
   function addAdjustment(kind: Adjustment["kind"]) {
+    const id = crypto.randomUUID();
     setAdjustments((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), label: kind === "discount" ? "Discount" : "Service charge", amountCents: 0, kind },
+      { id, label: kind === "discount" ? "Discount" : "Service charge", amountCents: 0, kind },
     ]);
+    setFocusAdjustmentId(id);
   }
 
   function updateAdjustment(id: string, field: "label" | "amount", value: string) {
@@ -179,7 +196,9 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       <StepHeader title="Review items" subtitle="Fix anything the scan got wrong." onBack={onBack} />
 
       {receipt.warning && (
-        <p className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">{receipt.warning}</p>
+        <p className="rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
+          {receipt.warning}
+        </p>
       )}
 
       {lastRemoved && (
@@ -192,7 +211,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
             Removed &ldquo;{lastRemoved.kind === "item" ? lastRemoved.value.name : lastRemoved.value.label}
             &rdquo;
           </span>
-          <button onClick={undoRemove} className="font-semibold text-brand-700 hover:underline">
+          <button onClick={undoRemove} className="font-semibold text-ledger-accent hover:underline">
             Undo
           </button>
         </div>
@@ -200,49 +219,54 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
 
       <ul className="flex flex-col gap-2">
         {items.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-2 rounded-lg border border-ledger-rule bg-ledger-surface p-2"
-          >
-            <input
-              className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
-              value={item.name}
-              onChange={(e) => updateItem(item.id, "name", e.target.value)}
-            />
-            <input
-              type="number"
-              min={1}
-              className="w-12 rounded-md border border-ledger-rule bg-transparent px-1 py-1 text-center text-sm text-ledger-ink tabular-nums"
-              value={draftOr(`qty-${item.id}`, String(item.quantity))}
-              onChange={(e) => {
-                setDraft(`qty-${item.id}`, e.target.value);
-                updateItem(item.id, "quantity", e.target.value);
-              }}
-              onBlur={() => clearDraft(`qty-${item.id}`)}
-            />
-            <input
-              type="number"
-              step="0.01"
-              className="w-20 rounded-md border border-ledger-rule bg-transparent px-2 py-1 text-right text-sm font-mono text-ledger-ink tabular-nums"
-              value={draftOr(`price-${item.id}`, centsToDollarsInput(item.priceCents))}
-              onChange={(e) => {
-                setDraft(`price-${item.id}`, e.target.value);
-                updateItem(item.id, "price", e.target.value);
-              }}
-              onBlur={() => clearDraft(`price-${item.id}`)}
-            />
-            <button
-              onClick={() => removeItem(item.id)}
-              className="text-ledger-inkFaint hover:text-red-400"
-              aria-label={`Remove ${item.name}`}
-            >
-              ✕
-            </button>
+          <li key={item.id} className="rounded-lg border border-ledger-rule bg-ledger-surface p-2">
+            <div className="flex items-center gap-2">
+              <input
+                className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-ledger-ink focus:border-brand-500 focus:outline-none"
+                value={item.name}
+                onChange={(e) => updateItem(item.id, "name", e.target.value)}
+              />
+              <input
+                type="number"
+                min={1}
+                className="w-12 rounded-md border border-ledger-rule bg-transparent px-1 py-1 text-center text-sm text-ledger-ink tabular-nums"
+                value={draftOr(`qty-${item.id}`, String(item.quantity))}
+                onChange={(e) => {
+                  setDraft(`qty-${item.id}`, e.target.value);
+                  updateItem(item.id, "quantity", e.target.value);
+                }}
+                onBlur={() => clearDraft(`qty-${item.id}`)}
+              />
+              <input
+                type="number"
+                step="0.01"
+                className="w-20 rounded-md border border-ledger-rule bg-transparent px-2 py-1 text-right text-sm font-mono text-ledger-ink tabular-nums"
+                value={draftOr(`price-${item.id}`, centsToDollarsInput(item.priceCents))}
+                onChange={(e) => {
+                  setDraft(`price-${item.id}`, e.target.value);
+                  updateItem(item.id, "price", e.target.value);
+                }}
+                onBlur={() => clearDraft(`price-${item.id}`)}
+              />
+              <button
+                onClick={() => removeItem(item.id)}
+                className="text-ledger-inkFaint hover:text-red-400"
+                aria-label={`Remove ${item.name}`}
+              >
+                ✕
+              </button>
+            </div>
+            {item.quantity > 1 && (
+              <p className="mt-0.5 pl-2 text-xs tabular-nums text-ledger-inkFaint">
+                That price is the whole line — {item.quantity} &times;{" "}
+                {formatCents(Math.round(item.priceCents / item.quantity))} each
+              </p>
+            )}
           </li>
         ))}
       </ul>
 
-      <button onClick={addItem} className="self-start text-sm font-medium text-brand-700 hover:underline">
+      <button onClick={addItem} className="self-start text-sm font-medium text-ledger-accent hover:underline">
         + Add item
       </button>
 
@@ -264,6 +288,9 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
                 onChange={(e) => updateAdjustment(a.id, "label", e.target.value)}
               />
               <input
+                ref={(el) => {
+                  adjustmentAmountRefs.current[a.id] = el;
+                }}
                 type="number"
                 step="0.01"
                 className="w-20 rounded-md border border-ledger-rule bg-ledger-surface px-2 py-1 text-right text-sm font-mono tabular-nums"
@@ -287,16 +314,16 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       )}
 
       <div className="flex gap-4 self-start text-sm font-medium">
-        <button onClick={() => addAdjustment("discount")} className="text-brand-700 hover:underline">
+        <button onClick={() => addAdjustment("discount")} className="text-ledger-accent hover:underline">
           + Add discount
         </button>
-        <button onClick={() => addAdjustment("charge")} className="text-brand-700 hover:underline">
+        <button onClick={() => addAdjustment("charge")} className="text-ledger-accent hover:underline">
           + Add service charge
         </button>
       </div>
 
       {tipCents === 0 && (
-        <p className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">
+        <p className="rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
           Most receipts don&apos;t print the tip — add yours below so everyone&apos;s split is accurate.
         </p>
       )}
@@ -351,8 +378,8 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
                   }}
                   className={`rounded-full border px-2 py-0.5 text-xs tabular-nums transition ${
                     active
-                      ? "border-brand-600 bg-brand-600 text-[#2b3a34]"
-                      : "border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-brand-700"
+                      ? "border-brand-600 bg-brand-600 text-brand-ink"
+                      : "border-ledger-rule text-ledger-inkSoft hover:border-brand-400 hover:text-ledger-accent"
                   }`}
                 >
                   {Math.round(pct * 100)}%
@@ -370,7 +397,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
       <button
         onClick={handleNext}
         disabled={items.length === 0}
-        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-[#2b3a34] shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
+        className="mt-auto w-full rounded-md bg-brand-600 px-6 py-3 font-semibold text-brand-ink shadow-sm transition hover:bg-brand-700 disabled:opacity-60"
       >
         Next: Add people
       </button>

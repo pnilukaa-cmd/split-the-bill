@@ -101,7 +101,7 @@ export default function ShareSplit({
 
       <button
         onClick={handleShareOrCopy}
-        className="w-full rounded-md bg-brand-600 px-4 py-2.5 font-semibold text-[#2b3a34] transition hover:bg-brand-700"
+        className="w-full rounded-md bg-brand-600 px-4 py-2.5 font-semibold text-brand-ink transition hover:bg-brand-700"
       >
         {canNativeShare ? "Share link instead" : copied === "main" ? "Copied!" : "Copy link instead"}
       </button>
@@ -110,7 +110,7 @@ export default function ShareSplit({
 
       <button
         onClick={() => setShowMore((v) => !v)}
-        className="text-xs font-medium text-brand-700 hover:underline"
+        className="text-xs font-medium text-ledger-accent hover:underline"
       >
         {showMore ? "Fewer options" : "More options"}
       </button>
@@ -154,7 +154,7 @@ export default function ShareSplit({
                           t.personId
                         )
                       }
-                      className="text-xs font-medium text-brand-700 hover:underline"
+                      className="text-xs font-medium text-ledger-accent hover:underline"
                     >
                       {copied === t.personId ? "Copied!" : "Copy link"}
                     </button>

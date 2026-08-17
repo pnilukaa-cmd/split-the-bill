@@ -9,6 +9,7 @@ import PayLinks from "./PayLinks";
 import StepHeader from "./StepHeader";
 import ShareSplit from "./ShareSplit";
 import InstallPrompt from "./InstallPrompt";
+import PayoutAsk from "./PayoutAsk";
 import TipAsk from "./TipAsk";
 
 interface Props {
@@ -37,7 +38,7 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
       <InstallPrompt />
 
       {unassignedItems.length > 0 && (
-        <div className="rounded-lg bg-amber-900/30 px-4 py-2 text-sm text-amber-200">
+        <div className="rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
           {unassignedItems.length} item{unassignedItems.length === 1 ? " isn't" : "s aren't"} assigned to
           anyone yet, so {unassignedItems.length === 1 ? "it isn't" : "they aren't"} included below:{" "}
           {unassignedItems.map((i) => i.name).join(", ")}.
@@ -52,7 +53,7 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
                 <PersonAvatar name={t.name} icon={iconByPersonId.get(t.personId)} size="md" />
                 {t.name}
               </span>
-              <span className="font-mono text-lg font-bold tabular-nums text-brand-700">
+              <span className="font-mono text-lg font-bold tabular-nums text-ledger-accent">
                 {formatCents(t.totalCents)}
               </span>
             </div>
@@ -61,7 +62,7 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
               <span>Tax {formatCents(t.taxCents)}</span>
               <span>Tip {formatCents(t.tipCents)}</span>
               {t.adjustmentsCents !== 0 && (
-                <span className={t.adjustmentsCents < 0 ? "text-[#d98a72]" : undefined}>
+                <span className={t.adjustmentsCents < 0 ? "text-ledger-negative" : undefined}>
                   Adjustments {t.adjustmentsCents > 0 ? "+" : ""}
                   {formatCents(t.adjustmentsCents)}
                 </span>
@@ -79,9 +80,11 @@ export default function SplitSummary({ receipt, people, assignments, itemWeights
 
       {unassignedItems.length === 0 && (
         <div className="flex justify-center">
-          <span className="font-hand text-xl text-brand-500">Balanced to the cent</span>
+          <span className="font-hand text-xl text-ledger-accent">Balanced to the cent</span>
         </div>
       )}
+
+      {people.length > 1 && <PayoutAsk payouts={payouts} onChange={setPayouts} />}
 
       <TipAsk />
 

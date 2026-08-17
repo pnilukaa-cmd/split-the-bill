@@ -16,7 +16,7 @@ export default function PayLinks({ payouts, amountCents, note }: Props) {
           href={buildVenmoPayUrl(payouts.venmo, amountCents, note)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-semibold text-brand-700 hover:underline"
+          className="text-xs font-semibold text-ledger-accent hover:underline"
         >
           Pay on Venmo
         </a>
@@ -26,7 +26,7 @@ export default function PayLinks({ payouts, amountCents, note }: Props) {
           href={buildPayPalPayUrl(payouts.paypal, amountCents)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-semibold text-brand-700 hover:underline"
+          className="text-xs font-semibold text-ledger-accent hover:underline"
         >
           Pay on PayPal
         </a>

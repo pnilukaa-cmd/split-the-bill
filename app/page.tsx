@@ -104,6 +104,8 @@ export default function Home() {
           onNext={handlePeopleNext}
           onBack={() => setStep(quickMode ? "quick-entry" : "review-items")}
           nextLabel={quickMode ? "Next: See split" : "Next: Assign items"}
+          receiptTotalCents={receipt?.totalCents ?? 0}
+          evenSplitIsFinal={quickMode}
         />
       )}
       {step === "assign" && receipt && (
