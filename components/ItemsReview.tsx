@@ -173,6 +173,7 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
   }
 
   const itemsSubtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
+  const discountCents = adjustments.reduce((sum, a) => sum + (a.kind === "discount" ? a.amountCents : 0), 0);
   const adjustmentsNetCents = adjustments.reduce(
     (sum, a) => sum + (a.kind === "discount" ? -a.amountCents : a.amountCents),
     0
@@ -387,6 +388,11 @@ export default function ItemsReview({ receipt, onChange, onNext, onBack }: Props
               );
             })}
           </div>
+          {discountCents > 0 && (
+            <p className="text-right text-xs text-ledger-inkFaint">
+              Presets are % of {formatCents(itemsSubtotalCents)}, before the discount — standard tipping practice.
+            </p>
+          )}
         </div>
         <div className="col-span-2 flex items-center justify-between border-t border-ledger-ruleSoft pt-2 font-semibold">
           <span>Total</span>
