@@ -46,6 +46,33 @@ export function buildShareUrl(payload: SharePayload, personId?: string): string 
   return url.toString();
 }
 
+/**
+ * Same link, shortened: the encoded payload is cached server-side (see
+ * lib/shareStore.ts) behind a short slug instead of riding in the URL
+ * itself. Falls back to the long, fully self-contained buildShareUrl()
+ * above on any failure (offline, short links not configured, rate
+ * limited) — sharing should never break just because the shortener did.
+ */
+export async function buildShortShareUrl(payload: SharePayload, personId?: string): Promise<string> {
+  const encoded = encodeShareState(payload);
+  try {
+    const res = await fetch("/api/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ encoded }),
+    });
+    if (res.ok) {
+      const { slug } = (await res.json()) as { slug: string };
+      const url = new URL(`/s/${slug}`, window.location.origin);
+      if (personId) url.searchParams.set("p", personId);
+      return url.toString();
+    }
+  } catch {
+    // Offline or the share API is unreachable — fall through to the long link.
+  }
+  return buildShareUrl(payload, personId);
+}
+
 export function parseShareHash(hash: string): { payload: SharePayload; personId: string | null } | null {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
   if (!raw.startsWith(HASH_KEY)) return null;

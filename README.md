@@ -22,9 +22,12 @@ however your group already does (Venmo, cash, etc.).
 5. **Summary** — each person's total, with tax and tip distributed in
    proportion to what they ordered (not split evenly), and cents allocated
    with no rounding error left over. From here you can share the split as a
-   link (with a QR code, or a per-person deep link to just their total) —
-   the whole split is encoded in the URL, so opening it needs no login and
-   nothing is stored on a server.
+   link (with a QR code, or a per-person deep link to just their total). The
+   whole split is encoded directly in the URL — that link works with no login
+   and no server involved. If Upstash Redis is configured (see below), sharing
+   also offers a short link instead: the same encoded data, cached server-side
+   behind a short slug for `SHARE_LINK_TTL_DAYS` (60 by default) and then
+   expired. Either way nothing is stored permanently or tied to an account.
 
 ## Stack
 

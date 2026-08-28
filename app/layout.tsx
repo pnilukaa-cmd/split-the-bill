@@ -28,7 +28,7 @@ const chalkMono = IBM_Plex_Mono({
 
 const title = "Split the Bill – Free Receipt Splitter, No Login Needed";
 const description =
-  "Free bill splitter for restaurants and group hangouts. Snap a photo of the receipt, assign items, and split fairly — no login, no app to download, nothing saved.";
+  "Free bill splitter for restaurants and group hangouts. Snap a photo of the receipt, assign items, and split fairly — no login, no app to download.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -55,7 +55,7 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "Split the Bill",
-  description: "Snap a photo of the receipt, assign items, and split a bill fairly. No login, nothing saved.",
+  description: "Snap a photo of the receipt, assign items, and split a bill fairly. No login required.",
   url: siteUrl.toString(),
   applicationCategory: "FinanceApplication",
   operatingSystem: "Any (web browser)",

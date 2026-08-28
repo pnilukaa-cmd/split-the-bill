@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { buildShareUrl } from "@/lib/share";
+import { buildShareUrl, buildShortShareUrl } from "@/lib/share";
 import { formatCents } from "@/lib/split";
 import { Assignments, ItemWeights, ParsedReceipt, Person, PersonTotal } from "@/lib/types";
 import { PayoutHandles, savePayoutHandles } from "@/lib/payout";
+import { SHARE_LINK_TTL_DAYS } from "@/lib/config";
 
 interface Props {
   receipt: ParsedReceipt;
@@ -43,7 +44,17 @@ export default function ShareSplit({
   }
 
   useEffect(() => {
-    setShareUrl(buildShareUrl({ receipt, people, assignments, itemWeights, organizerPayouts: payouts }));
+    const payload = { receipt, people, assignments, itemWeights, organizerPayouts: payouts };
+    // Show the long, fully self-contained link immediately — it never blocks —
+    // then swap in a short one once the server round-trip resolves, if it does.
+    setShareUrl(buildShareUrl(payload));
+    let cancelled = false;
+    buildShortShareUrl(payload).then((url) => {
+      if (!cancelled) setShareUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [receipt, people, assignments, itemWeights, payouts]);
 
   useEffect(() => {
@@ -106,7 +117,9 @@ export default function ShareSplit({
         {canNativeShare ? "Share link instead" : copied === "main" ? "Copied!" : "Copy link instead"}
       </button>
 
-      <p className="text-center text-xs text-ledger-inkFaint">No login, nothing saved on a server.</p>
+      <p className="text-center text-xs text-ledger-inkFaint">
+        No login required. Short links expire after {SHARE_LINK_TTL_DAYS} days.
+      </p>
 
       <button
         onClick={() => setShowMore((v) => !v)}
@@ -145,15 +158,13 @@ export default function ShareSplit({
                   <li key={t.personId} className="flex items-center justify-between text-sm">
                     <span className="text-ledger-inkSoft">{t.name}</span>
                     <button
-                      onClick={() =>
-                        copy(
-                          buildShareUrl(
-                            { receipt, people, assignments, itemWeights, organizerPayouts: payouts },
-                            t.personId
-                          ),
+                      onClick={async () => {
+                        const url = await buildShortShareUrl(
+                          { receipt, people, assignments, itemWeights, organizerPayouts: payouts },
                           t.personId
-                        )
-                      }
+                        );
+                        copy(url, t.personId);
+                      }}
                       className="text-xs font-medium text-ledger-accent hover:underline"
                     >
                       {copied === t.personId ? "Copied!" : "Copy link"}

@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 const DAILY_SCAN_LIMIT = 8;
+const DAILY_SHARE_LINK_LIMIT = 30;
 
 const ratelimit =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
@@ -12,11 +13,26 @@ const ratelimit =
       })
     : null;
 
+const shareLinkRatelimit =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Ratelimit({
+        redis: Redis.fromEnv(),
+        limiter: Ratelimit.slidingWindow(DAILY_SHARE_LINK_LIMIT, "1 d"),
+        prefix: "split-the-bill:share-create",
+      })
+    : null;
+
 export async function isScanAllowed(identifier: string): Promise<boolean> {
   // No Upstash configured — rate limiting is a no-op until
   // UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are set.
   if (!ratelimit) return true;
   const { success } = await ratelimit.limit(identifier);
+  return success;
+}
+
+export async function isShareLinkCreateAllowed(identifier: string): Promise<boolean> {
+  if (!shareLinkRatelimit) return true;
+  const { success } = await shareLinkRatelimit.limit(identifier);
   return success;
 }
 
